@@ -94,7 +94,7 @@ I2cInitializer init0(
 // in other words, determine which data addr to be fetch for player 
 AudDSP dsp0(
 	.i_rst_n(i_rst_n),
-	.i_clk(),
+	.i_clk(i_AUD_BCLK),
 	.i_start(),
 	.i_pause(),
 	.i_stop(),
