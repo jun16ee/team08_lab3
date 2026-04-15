@@ -88,7 +88,7 @@ module AudDSP dsp0(
         endcase
     end
 
-    always_ff @(posedge i_AUD_BCLK or negedge i_rst_n) begin
+    always_ff @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
             state_r <= S_IDLE;
             read_addr_ptr_r <= 20'd0;
