@@ -1,9 +1,10 @@
+`include "AudDSP.sv";
 module Top (
-	input i_rst_n,
+	input i_rst_n, // key3
 	input i_clk,
-	input i_key_0,
-	input i_key_1,
-	input i_key_2,
+	input i_key_0, // Record/Pause
+	input i_key_1, // Play/Pause
+	input i_key_2, // Stop
 	// input [3:0] i_speed, // design how user can decide mode on your own
 	
 	// AudDSP and SRAM
@@ -62,6 +63,10 @@ assign io_I2C_SDAT = (i2c_oen) ? i2c_sdat : 1'bz;
 assign o_SRAM_ADDR = (state_r == S_RECD) ? addr_record : addr_play[19:0];
 assign io_SRAM_DQ  = (state_r == S_RECD) ? data_record : 16'dz; // sram_dq as output
 assign data_play   = (state_r != S_RECD) ? io_SRAM_DQ : 16'd0; // sram_dq as input
+
+// in S_RECD: dataplay = 0; io_SRAM_DQ = data_record (存東西進SRAM)
+// not in S_RECD: dataplay = z; io_SRAM_DQ = z 
+
 
 assign o_SRAM_WE_N = (state_r == S_RECD) ? 1'b0 : 1'b1;
 assign o_SRAM_CE_N = 1'b0;
