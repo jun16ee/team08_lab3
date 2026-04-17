@@ -1,19 +1,19 @@
-module AudDSP dsp0(
+module AudDSP(
 	input i_rst_n,
-	input i_clk,
-	input i_start,
+	input i_clk, //每cylce傳一次data
+    input i_start,
 	input i_pause,
 	input i_stop,
-    
-	input [3:0] i_speed, //1~8
+
+    input [3:0] i_speed, //1~8
 	input i_fast, 
 	input i_slow_0, // constant interpolation
 	input i_slow_1, // linear interpolation
 
-	input i_daclrck, //根據這個決定現在要送左或右聲道(1=右)
+	input i_daclrck, //根據這個決定現在要送左或右聲道(1=右)，每個週期傳一次data
 	input [15:0] i_sram_data, // 讀SRAM存的音檔
-
-	output [15:0] o_dac_data, //給喇叭 1cycle傳一次
+	output [15:0] o_dac_data, //給喇叭 1 daclrck cycle傳一次
+    output o_en,
 	output [19:0] o_sram_addr //要讀sram哪裡的資料 0~2^20-1
 );
 
@@ -21,68 +21,131 @@ module AudDSP dsp0(
         S_IDLE,
         S_PLAY,
         S_PAUSE
-    } state_t;
+    } play_state_t;
 
-    state_t state_r, state_w;
-    logic [19:0] read_addr_ptr_r, read_addr_ptr_w;
-    logic [15:0] readed_data_r, op_data_r, op_data_w;
-    logic [3:0] slow_counter_r, slow_counter_w;
+    typedef enum logic [2:0] {
+        S_RESET,
+        S_PAUSED,
+        S_PROCESS,
+        S_READY,
+        S_OUTPUT
+    } dsp_state_t;
 
-    assign o_sram_addr = read_addr_ptr_r;
-    assign o_dac_data = i_fast ? readed_data_r : op_data_r;
+    play_state_t play_state_r, play_state_w;
+    dsp_state_t dsp_state_r, dsp_state_w;
+    logic [19:0] read_addr_r, read_addr_w;
+    logic [15:0] op_r, op_w;
+    logic [3:0] slow_counter_w, slow_counter_r;
+    logic [15:0] rdata_nxt_r, rdata_now_r, rdata_now_w;
+    
+    assign o_sram_addr = read_addr_r;
+    assign o_dac_data = (dsp_state_r==S_READY || dsp_state_r==S_OUTPUT) ? op_r : 16'd0;
+    assign o_en = (dsp_state_r!=S_RESET) && i_daclrck;
+   
+    logic [15:0] interpolation_value;
+    interpolation_calculator u_interpolation_calculator( // out = D0 + (D1 - D0) * C/S
+        .d0(rdata_now_r),     // Current data
+        .d1(rdata_nxt_r),     // Next data
+        .s(i_speed),      // Slow speed: 2~8
+        .c(slow_counter_r),      // Slow counter: 0~s-1
+        .o_data(interpolation_value)  
+    );
+
 
     always_comb begin
-        state_w = state_r;
-        read_addr_ptr_w = read_addr_ptr_r;
-        op_data_w = op_data_r;
-        case(state_r)
-            S_IDLE: begin
-            end
-
-            S_PLAY: begin
-                case(1'b1) // one hot decoding
-                    i_fast: begin
-                        read_addr_ptr_w = read_addr_ptr_r + i_speed;
+        dsp_state_w = dsp_state_r;
+        read_addr_w = read_addr_r;
+        rdata_now_w = rdata_now_r;
+        slow_counter_w = slow_counter_r;
+        op_w = op_r;
+        // if (play_state_r==S_PLAY) begin
+            case(dsp_state_r)
+                S_RESET: begin
+                    if (!i_daclrck && play_state_r==S_PLAY) begin
+                        dsp_state_w = S_PROCESS;
+                        read_addr_w = 20'd0; //重新開始了 要initialize
                     end
-
-                    i_slow_0: begin
-                        read_addr_ptr_w = read_addr_ptr_r + 1'b1;
-                        readed_data_r
+                end
+                S_PAUSED: begin
+                    if (!i_daclrck && play_state_r==S_PLAY) begin
+                        dsp_state_w = S_PROCESS;
+                        // 不用把addr歸零 initialize
                     end
-                endcase
-                
-                
-            end
+                end
+                S_PROCESS: begin
+                    dsp_state_w = S_READY;
+                    if(i_slow_1) begin
+                        op_w = interpolation_value;
+                    end else begin
+                        op_w = rdata_now_r;
+                    end
+                end
+                S_READY: begin
+                    if (i_daclrck) dsp_state_w = S_OUTPUT;
+                end
+                S_OUTPUT: begin
+                    if (!i_daclrck) begin 
+                        if (play_state_r==S_IDLE) begin
+                            dsp_state_w = S_RESET;
+                        end else if (play_state_r==S_PAUSE) begin
+                            dsp_state_w = S_PAUSED;
+                        end else begin
+                            dsp_state_w = S_PROCESS;
+                            case(1'b1)
+                                i_fast: begin
+                                    read_addr_w = read_addr_r + i_speed;
+                                    rdata_now_w = rdata_nxt_r;
+                                end
+                                i_slow_0, i_slow_1: begin // 這兩個模式計數邏輯一樣，可以合併
+                                    if (slow_counter_r == i_speed - 1'b1) begin
+                                        read_addr_w = read_addr_r + 1'b1;
+                                        rdata_now_w = rdata_nxt_r;
+                                        slow_counter_w = 4'd0;
+                                    end else begin
+                                        slow_counter_w = slow_counter_r + 1'b1;
+                                    end
+                                end
+                                // 正常 1 倍速 (Normal Speed) 的預設行為
+                                default: begin
+                                    read_addr_w = read_addr_r + 1'b1;
+                                    rdata_now_w = rdata_nxt_r;
+                                    slow_counter_w = 4'd0;
+                                end
+                            endcase
+                        end
+                    end
+                end
+            endcase
+        // end else begin
+        //     dsp_state_w = S_RESET;
+        // end
 
-            S_PAUSE: begin
-            end
-        endcase
     end
 
-    // next state logic
+
+    // play state NL
     always_comb begin
-        state_w = state_r;
-        case(state_r)
+        play_state_w = play_state_r;
+        case(play_state_r)
             S_IDLE: begin
                 if (i_start) begin
-                    state_w = S_PLAY;
-                    read_addr_ptr_w = 20'd0; //initialize
+                    play_state_w = S_PLAY;
                 end
             end
 
             S_PLAY: begin
                 if (i_stop) begin
-                    state_w = S_IDLE;
+                    play_state_w = S_IDLE;
                 end else if (i_pause) begin
-                    state_w = S_PAUSE;
+                    play_state_w = S_PAUSE;
                 end
             end
 
             S_PAUSE: begin
                 if (i_stop) begin
-                    state_w = S_IDLE;
+                    play_state_w = S_IDLE;
                 end else if (i_start) begin
-                    state_w = S_PLAY;
+                    play_state_w = S_PLAY;
                 end
             end
         endcase
@@ -90,20 +153,27 @@ module AudDSP dsp0(
 
     always_ff @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
-            state_r <= S_IDLE;
-            read_addr_ptr_r <= 20'd0;
-            readed_data_r <= 16'd0;
-            op_data_r <= 16'd0;
+            play_state_r <= S_IDLE;
+            dsp_state_r <= S_RESET;
+            rdata_now_r <= 16'd0;
+            rdata_nxt_r <= 16'd0;
+            read_addr_r <= 20'd0;
+            op_r <= 16'd0;
+            slow_counter_r <= 4'd0;
         end
         else begin
-            state_r <= state_w;
-            read_addr_ptr_r <= read_addr_ptr_w;
-            op_data_r <= op_data_w;
-            readed_data_r <= i_sram_data;
+            play_state_r <= play_state_w;
+            dsp_state_r <= dsp_state_w;
+            rdata_now_r <= rdata_now_w;
+            rdata_nxt_r <= i_sram_data;
+            read_addr_r <= read_addr_w;
+            op_r <= op_w;
+            slow_counter_r <= slow_counter_w;
         end
     end
 
 endmodule
+
 
 module interpolation_calculator( // out = D0 + (D1 - D0) * C/S
     input  [15:0] d0,     // Current data
@@ -118,7 +188,7 @@ module interpolation_calculator( // out = D0 + (D1 - D0) * C/S
     
     // d1-d0 17-bit
     logic signed [16:0] diff;
-    assign diff = $signed(d0) - $signed(d1);        
+    assign diff = $signed(d1) - $signed(d0);        
     
     // 權重為無號數，最大值對應於 1 (65536，但我們用 16-bit 存小數部位)
     logic        [15:0] weight;      
@@ -184,6 +254,6 @@ module interpolation_calculator( // out = D0 + (D1 - D0) * C/S
 
     // 步驟 4：加回基準點，輸出結果
     // mult[31:16] 等同於 (mult >> 16)，也就是除以 65536 還原真實比例
-    assign o_data = $signed(d0) + mult[31:16];
+    assign o_data = $signed(d0) + 16'($signed(mult) >>> 16);
 
 endmodule
