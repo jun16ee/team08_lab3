@@ -76,6 +76,7 @@ assign o_SRAM_UB_N = 1'b0;
 
 // below is a simple example for module division
 // you can design these as you like
+logic play_en;
 
 // === I2cInitializer ===
 // sequentially sent out settings to initialize WM8731 with I2C protocal
@@ -105,6 +106,7 @@ AudDSP dsp0(
 	.i_daclrck(i_AUD_DACLRCK),
 	.i_sram_data(data_play),
 	.o_dac_data(dac_data),
+	.o_en(play_en),
 	.o_sram_addr(addr_play)
 );
 
@@ -114,7 +116,7 @@ AudPlayer player0(
 	.i_rst_n(i_rst_n),
 	.i_bclk(i_AUD_BCLK),
 	.i_daclrck(i_AUD_DACLRCK),
-	.i_en(), // enable AudPlayer only when playing audio, work with AudDSP
+	.i_en(play_en), // enable AudPlayer only when playing audio, work with AudDSP
 	.i_dac_data(dac_data), //dac_data
 	.o_aud_dacdat(o_AUD_DACDAT)
 );
