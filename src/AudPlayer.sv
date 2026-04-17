@@ -6,7 +6,7 @@ module AudPlayer(
 	input [15:0] i_dac_data, //dac_data passed by audDSP
 	output o_aud_dacdat // pass to wm8731
 );
-    logic op_r, op_w;
+    logic op_r, op_w; //op擋FF，剛好做到delay 1 cycle
     assign o_aud_dacdat = op_r;
 
     typedef enum logic [1:0] {
@@ -62,8 +62,8 @@ module AudPlayer(
             state_r <= S_IDLE;
         end
         else begin
+            state_r <= state_w;
             if (i_en) begin
-                state_r <= state_w;
                 op_r <= op_w;
                 counter_r <= counter_w;
             end
