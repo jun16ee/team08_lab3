@@ -6,21 +6,28 @@ module AudDSP(
 	input i_slow_0, // constant interpolation
 	input i_slow_1, // linear interpolation
 
-	// input i_daclrck, //根據這個決定現在要送左或右聲道(1=右)，每個週期傳一次data
+	input i_daclrck, //根據這個決定現在要送左或右聲道(1=右)，每個週期傳一次data
 	input [15:0] i_sram_data, // 讀SRAM存的音檔
 	output [15:0] o_dac_data, //給喇叭 1 daclrck cycle傳一次
     // output o_en,
 	output [19:0] o_sram_addr //要讀sram哪裡的資料 0~2^20-1
 );
 
-    
+    typedef enum logic [1:0] {
+        S_REST,
+        S_PROCESS,
+        S_READY,
+        S_OUTPUT
+    } dsp_state_t;
+
+    dsp_state_t dsp_state_r, dsp_state_w;
     logic [19:0] read_addr_r, read_addr_w;
     logic [15:0] op_r, op_w;
     logic [3:0] slow_counter_w, slow_counter_r;
     logic [15:0] rdata_nxt_r, rdata_now_r, rdata_now_w;
     
     assign o_sram_addr = read_addr_r;
-    assign o_dac_data = op_r;
+    assign o_dac_data = (dsp_state_r==S_READY || dsp_state_r==S_OUTPUT) ? op_r : 16'd0;
    
     logic [15:0] interpolation_value;
     interpolation_calculator u_interpolation_calculator( // out = D0 + (D1 - D0) * C/S
@@ -32,43 +39,77 @@ module AudDSP(
     );
 
     always_comb begin
+        dsp_state_w = dsp_state_r;
         read_addr_w = read_addr_r;
         rdata_now_w = rdata_now_r;
         slow_counter_w = slow_counter_r;
-
-        case(1'b1)
-            i_fast: begin
-                read_addr_w = read_addr_r + i_speed;
-                rdata_now_w = rdata_nxt_r;
+        case(dsp_state_r)
+            S_REST: begin
+                if (!i_daclrck) dsp_state_w = S_PROCESS;
             end
-            i_slow_0, i_slow_1: begin // 這兩個模式計數邏輯一樣，可以合併
-                if (slow_counter_r == i_speed - 1'b1) begin
-                    read_addr_w = read_addr_r + 1'b1;
-                    rdata_now_w = rdata_nxt_r;
-                    slow_counter_w = 4'd0;
-                end else begin
-                    slow_counter_w = slow_counter_r + 1'b1;
+            S_PROCESS: begin
+                dsp_state_w = S_READY;
+            end
+            S_READY: begin
+                if (i_daclrck) dsp_state_w = S_OUTPUT;
+            end
+            S_OUTPUT: begin
+                if (!i_daclrck) begin 
+                    dsp_state_w = S_PROCESS;
+                    case(1'b1)
+                        i_fast: begin
+                            read_addr_w = read_addr_r + i_speed;
+                            rdata_now_w = rdata_nxt_r;
+                        end
+                        i_slow_0, i_slow_1: begin // 這兩個模式計數邏輯一樣，可以合併
+                            if (slow_counter_r == i_speed - 1'b1) begin
+                                read_addr_w = read_addr_r + 1'b1;
+                                rdata_now_w = rdata_nxt_r;
+                                slow_counter_w = 4'd0;
+                            end else begin
+                                slow_counter_w = slow_counter_r + 1'b1;
+                            end
+                        end
+                        // 正常 1 倍速 (Normal Speed) 的預設行為
+                        default: begin
+                            read_addr_w = read_addr_r + 1'b1;
+                            rdata_now_w = rdata_nxt_r;
+                            slow_counter_w = 4'd0;
+                        end
+                    endcase
                 end
             end
-            
-            // [修正] 補上正常 1 倍速 (Normal Speed) 的預設行為
-            default: begin
-                read_addr_w = read_addr_r + 1'b1;
-                rdata_now_w = rdata_nxt_r;
-                slow_counter_w = 4'd0;
-            end
-
         endcase
+    end
 
-        if(i_slow_1) begin
-            op_w = interpolation_value;
-        end else begin
-            op_w = rdata_now_r;
-        end
+
+    // OL
+    always_comb begin
+        op_w = op_r;
+        case(dsp_state_r)
+            S_REST: begin
+                
+            end
+            S_PROCESS: begin
+                if(i_slow_1) begin
+                    op_w = interpolation_value;
+                end else begin
+                    op_w = rdata_now_r;
+                end
+            end
+            S_READY: begin
+                
+            end
+            S_OUTPUT: begin
+                
+            end
+        endcase
+        
     end
 
     always_ff @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
+            dsp_state_r <= S_REST;
             rdata_now_r <= 16'd0;
             rdata_nxt_r <= 16'd0;
             read_addr_r <= 20'd0;
@@ -76,6 +117,7 @@ module AudDSP(
             slow_counter_r <= 4'd0;
         end
         else begin
+            dsp_state_r <= dsp_state_w;
             rdata_now_r <= rdata_now_w;
             rdata_nxt_r <= i_sram_data;
             read_addr_r <= read_addr_w;
