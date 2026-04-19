@@ -8,7 +8,7 @@ module DE2_115 (
 	output [8:0] LEDG,
 	output [17:0] LEDR,
 	input [3:0] KEY,
-	input [17:0] SW,
+	input [17:0] SW, // lever
 	output [6:0] HEX0,
 	output [6:0] HEX1,
 	output [6:0] HEX2,
@@ -177,7 +177,18 @@ Top top0(
 	.i_key_0(key0down),
 	.i_key_1(key1down),
 	.i_key_2(key2down),
-	// .i_speed(SW[3:0]), // design how user can decide mode on your own
+	// speed (SW[0] ~ SW[6])
+    .i_speed2(SW[0]),
+    .i_speed3(SW[1]),
+    .i_speed4(SW[2]),
+    .i_speed5(SW[3]),
+    .i_speed6(SW[4]),
+    .i_speed7(SW[5]),
+    .i_speed8(SW[6]),
+
+    // mode control
+    .interpolation_method(SW[16]),
+    .fast_slow(SW[17])
 	
 	// AudDSP and SRAM
 	.o_SRAM_ADDR(SRAM_ADDR), // [19:0]
