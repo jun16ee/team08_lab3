@@ -1,7 +1,9 @@
 module AudDSP(
 	input i_rst_n,
 	input i_clk, //每cylce傳一次data
-    input i_start,
+    // one-hot (Top那邊維護，至少high其中一個)
+    // 一定在i_daclrck falling edge 變成stop或pause 
+    input i_play,
 	input i_pause,
 	input i_stop,
 
@@ -17,11 +19,6 @@ module AudDSP(
 	output [19:0] o_sram_addr //要讀sram哪裡的資料 0~2^20-1
 );
 
-    typedef enum logic [1:0] {
-        S_IDLE,
-        S_PLAY,
-        S_PAUSE
-    } play_state_t;
 
     typedef enum logic [2:0] {
         S_RESET,
@@ -31,7 +28,6 @@ module AudDSP(
         S_OUTPUT
     } dsp_state_t;
 
-    play_state_t play_state_r, play_state_w;
     dsp_state_t dsp_state_r, dsp_state_w;
     logic [19:0] read_addr_r, read_addr_w;
     logic [15:0] op_r, op_w;
@@ -58,94 +54,62 @@ module AudDSP(
         rdata_now_w = rdata_now_r;
         slow_counter_w = slow_counter_r;
         op_w = op_r;
-        // if (play_state_r==S_PLAY) begin
-            case(dsp_state_r)
-                S_RESET: begin
-                    if (!i_daclrck && play_state_r==S_PLAY) begin
+        case(dsp_state_r)
+            S_RESET: begin
+                if (!i_daclrck && i_play) begin
+                    dsp_state_w = S_PROCESS;
+                    read_addr_w = 20'd0; //重新開始了 要initialize
+                end
+            end
+            S_PAUSED: begin
+                if (!i_daclrck && i_play) begin
+                    dsp_state_w = S_PROCESS;
+                    // 不用把addr歸零initialize
+                end
+            end
+            S_PROCESS: begin
+                dsp_state_w = S_READY;
+                if(i_slow_1) begin
+                    op_w = interpolation_value;
+                end else begin
+                    op_w = rdata_now_r;
+                end
+            end
+            S_READY: begin
+                if (i_daclrck) dsp_state_w = S_OUTPUT;
+            end
+            S_OUTPUT: begin
+                if (!i_daclrck) begin 
+                    if (i_stop) begin
+                        dsp_state_w = S_RESET;
+                    end else if (i_pause) begin
+                        dsp_state_w = S_PAUSED;
+                    end else if (i_play)begin
                         dsp_state_w = S_PROCESS;
-                        read_addr_w = 20'd0; //重新開始了 要initialize
-                    end
-                end
-                S_PAUSED: begin
-                    if (!i_daclrck && play_state_r==S_PLAY) begin
-                        dsp_state_w = S_PROCESS;
-                        // 不用把addr歸零 initialize
-                    end
-                end
-                S_PROCESS: begin
-                    dsp_state_w = S_READY;
-                    if(i_slow_1) begin
-                        op_w = interpolation_value;
-                    end else begin
-                        op_w = rdata_now_r;
-                    end
-                end
-                S_READY: begin
-                    if (i_daclrck) dsp_state_w = S_OUTPUT;
-                end
-                S_OUTPUT: begin
-                    if (!i_daclrck) begin 
-                        if (play_state_r==S_IDLE) begin
-                            dsp_state_w = S_RESET;
-                        end else if (play_state_r==S_PAUSE) begin
-                            dsp_state_w = S_PAUSED;
-                        end else begin
-                            dsp_state_w = S_PROCESS;
-                            case(1'b1)
-                                i_fast: begin
-                                    read_addr_w = read_addr_r + i_speed;
-                                    rdata_now_w = rdata_nxt_r;
-                                end
-                                i_slow_0, i_slow_1: begin // 這兩個模式計數邏輯一樣，可以合併
-                                    if (slow_counter_r == i_speed - 1'b1) begin
-                                        read_addr_w = read_addr_r + 1'b1;
-                                        rdata_now_w = rdata_nxt_r;
-                                        slow_counter_w = 4'd0;
-                                    end else begin
-                                        slow_counter_w = slow_counter_r + 1'b1;
-                                    end
-                                end
-                                // 正常 1 倍速 (Normal Speed) 的預設行為
-                                default: begin
+                        case(1'b1)
+                            i_fast: begin
+                                read_addr_w = read_addr_r + i_speed;
+                                rdata_now_w = rdata_nxt_r;
+                            end
+                            i_slow_0, i_slow_1: begin // 這兩個模式計數邏輯一樣，可以合併
+                                if (slow_counter_r == i_speed - 1'b1) begin
                                     read_addr_w = read_addr_r + 1'b1;
                                     rdata_now_w = rdata_nxt_r;
                                     slow_counter_w = 4'd0;
+                                end else begin
+                                    slow_counter_w = slow_counter_r + 1'b1;
                                 end
-                            endcase
-                        end
+                            end
+                            // 正常 1 倍速 (Normal Speed) 的預設行為
+                            default: begin
+                                read_addr_w = read_addr_r + 1'b1;
+                                rdata_now_w = rdata_nxt_r;
+                                slow_counter_w = 4'd0;
+                            end
+                        endcase
+                    end else begin //default
+                        dsp_state_w = S_RESET;
                     end
-                end
-            endcase
-        // end else begin
-        //     dsp_state_w = S_RESET;
-        // end
-
-    end
-
-
-    // play state NL
-    always_comb begin
-        play_state_w = play_state_r;
-        case(play_state_r)
-            S_IDLE: begin
-                if (i_start) begin
-                    play_state_w = S_PLAY;
-                end
-            end
-
-            S_PLAY: begin
-                if (i_stop) begin
-                    play_state_w = S_IDLE;
-                end else if (i_pause) begin
-                    play_state_w = S_PAUSE;
-                end
-            end
-
-            S_PAUSE: begin
-                if (i_stop) begin
-                    play_state_w = S_IDLE;
-                end else if (i_start) begin
-                    play_state_w = S_PLAY;
                 end
             end
         endcase
@@ -153,7 +117,6 @@ module AudDSP(
 
     always_ff @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
-            play_state_r <= S_IDLE;
             dsp_state_r <= S_RESET;
             rdata_now_r <= 16'd0;
             rdata_nxt_r <= 16'd0;
@@ -162,7 +125,6 @@ module AudDSP(
             slow_counter_r <= 4'd0;
         end
         else begin
-            play_state_r <= play_state_w;
             dsp_state_r <= dsp_state_w;
             rdata_now_r <= rdata_now_w;
             rdata_nxt_r <= i_sram_data;
