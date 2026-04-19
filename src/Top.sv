@@ -96,7 +96,7 @@ I2cInitializer init0(
 AudDSP dsp0(
 	.i_rst_n(i_rst_n),
 	.i_clk(i_AUD_BCLK),
-	.i_start(),
+	.i_play(),
 	.i_pause(),
 	.i_stop(),
 	.i_speed(),
@@ -127,7 +127,7 @@ AudRecorder recorder0(
 	.i_rst_n(i_rst_n), 
 	.i_clk(i_AUD_BCLK),
 	.i_lrc(i_AUD_ADCLRCK),
-	.i_start(),
+	.i_rec(),
 	.i_pause(),
 	.i_stop(),
 	.i_data(i_AUD_ADCDAT),
@@ -137,6 +137,39 @@ AudRecorder recorder0(
 
 always_comb begin
 	// design your control here
+end
+
+typedef enum logic [1:0] {
+	S_IDLE,
+	S_PLAY,
+	S_PAUSE
+} play_state_t;
+// play state NL
+always_comb begin
+	play_state_w = play_state_r;
+	case(play_state_r)
+		S_IDLE: begin
+			if (i_start) begin
+				play_state_w = S_PLAY;
+			end
+		end
+
+		S_PLAY: begin
+			if (i_stop) begin
+				play_state_w = S_IDLE;
+			end else if (i_pause) begin
+				play_state_w = S_PAUSE;
+			end
+		end
+
+		S_PAUSE: begin
+			if (i_stop) begin
+				play_state_w = S_IDLE;
+			end else if (i_start) begin
+				play_state_w = S_PLAY;
+			end
+		end
+	endcase
 end
 
 always_ff @(posedge i_AUD_BCLK or negedge i_rst_n) begin

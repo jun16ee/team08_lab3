@@ -3,7 +3,7 @@ module AudPlayer(
 	input i_bclk,
 	input i_daclrck,
 	input i_en, // enable AudPlayer only when playing audio
-	input [15:0] i_dac_data, //dac_data passed by audDSP
+	input [15:0] i_dac_data, //dac_data from audDSP
 	output o_aud_dacdat // pass to wm8731
 );
     logic op_r, op_w; //op擋FF，剛好做到delay 1 cycle
