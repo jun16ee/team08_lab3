@@ -1,4 +1,7 @@
 `include "AudDSP.sv";
+`include "AudPlayer.sv";
+`include "AudRecorder.sv";
+`include "I2CInit.sv";
 module Top (
 	input i_rst_n, // key3
 	input i_clk,
