@@ -36,7 +36,8 @@ module AudDSP(
     logic [15:0] op_r, op_w;
     logic [3:0] slow_counter_w, slow_counter_r;
     logic [15:0] rdata_nxt_r, rdata_now_r, rdata_now_w;
-    
+    logic [2:0] wait_SRAM_counter_w, wait_SRAM_counter_r;
+
     assign o_sram_addr = read_addr_r;
     assign o_dac_data = (dsp_state_r==S_READY || dsp_state_r==S_OUTPUT) ? op_r : 16'd0;
     assign o_en = (dsp_state_r != S_RESET) && (dsp_state_r != S_PAUSED);
@@ -56,6 +57,7 @@ module AudDSP(
         read_addr_w = read_addr_r;
         rdata_now_w = rdata_now_r;
         slow_counter_w = slow_counter_r;
+        wait_SRAM_counter_w = wait_SRAM_counter_r;
         op_w = op_r;
         case(dsp_state_r)
             S_RESET: begin
@@ -71,8 +73,12 @@ module AudDSP(
                 end
             end
             S_PROCESS: begin //wait for SRAM
-                dsp_state_w = S_READY;
-                
+                if (wait_SRAM_counter_r == 3'd4) begin
+                    dsp_state_w = S_READY;
+                    wait_SRAM_counter_w = 3'd0;
+                end else begin 
+                    wait_SRAM_counter_w = wait_SRAM_counter_r + 1'b1;
+                end
             end
             S_READY: begin
                 if (i_daclrck) dsp_state_w = S_OUTPUT;
@@ -128,6 +134,7 @@ module AudDSP(
             read_addr_r <= 20'd0;
             op_r <= 16'd0;
             slow_counter_r <= 4'd0;
+            wait_SRAM_counter_r <= 3'd0;
         end
         else begin
             dsp_state_r <= dsp_state_w;
@@ -136,6 +143,7 @@ module AudDSP(
             read_addr_r <= read_addr_w;
             op_r <= op_w;
             slow_counter_r <= slow_counter_w;
+            wait_SRAM_counter_r <= wait_SRAM_counter_w;
         end
     end
 
