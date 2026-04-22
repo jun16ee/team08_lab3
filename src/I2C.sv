@@ -180,4 +180,4 @@ module I2cInitializer (
 
 
 
-endmodule;
+endmodule

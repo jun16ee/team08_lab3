@@ -1,7 +1,3 @@
-`include "AudDSP.sv";
-`include "AudPlayer.sv";
-`include "AudRecorder.sv";
-`include "I2CInit.sv";
 module Top (
 	input i_rst_n, // key3
 	input i_clk,
@@ -10,16 +6,16 @@ module Top (
 	input i_key_2, // Stop
 	// input [3:0] i_speed, // design how user can decide mode on your own
 	// one-hot priority(8>7>..>2)
-	input i_speed2;
-	input i_speed3;
-	input i_speed4;
-	input i_speed5;
-	input i_speed6;
-	input i_speed7;
-	input i_speed8;
+	input i_speed2,
+	input i_speed3,
+	input i_speed4,
+	input i_speed5,
+	input i_speed6,
+	input i_speed7,
+	input i_speed8,
 
-	input interpolation_method;
-	input fast_slow; // f1/s0，speed==1的話哪個都沒差
+	input interpolation_method,
+	input fast_slow, // f1/s0，speed==1的話哪個都沒差
 	
 	// AudDSP and SRAM
 	output [19:0] o_SRAM_ADDR,
@@ -70,21 +66,23 @@ module Top (
 		S_PLAY_PAUSE
 	} opr_state_t;
 
+	opr_state_t opr_state_r, opr_state_w;
+
 	logic i2c_oen, i2c_sdat;
 	logic [19:0] addr_record, addr_play;
 	logic [15:0] data_record, data_play, dac_data;
 
 	assign io_I2C_SDAT = (i2c_oen) ? i2c_sdat : 1'bz;
 
-	assign o_SRAM_ADDR = (state_r == S_RECD) ? addr_record : addr_play[19:0];
-	assign io_SRAM_DQ  = (state_r == S_RECD) ? data_record : 16'dz; // sram_dq as output
-	assign data_play   = (state_r != S_RECD) ? io_SRAM_DQ : 16'd0; // sram_dq as input
+	assign o_SRAM_ADDR = (opr_state_r == S_RECD) ? addr_record : addr_play[19:0];
+	assign io_SRAM_DQ  = (opr_state_r == S_RECD) ? data_record : 16'dz; // sram_dq as output
+	assign data_play   = (opr_state_r != S_RECD) ? io_SRAM_DQ : 16'd0; // sram_dq as input
 
 	// in S_RECD: dataplay = 0; io_SRAM_DQ = data_record (存東西進SRAM)
 	// not in S_RECD: dataplay = z; io_SRAM_DQ = z 
 
 
-	assign o_SRAM_WE_N = (state_r == S_RECD) ? 1'b0 : 1'b1;
+	assign o_SRAM_WE_N = (opr_state_r == S_RECD) ? 1'b0 : 1'b1;
 	assign o_SRAM_CE_N = 1'b0;
 	assign o_SRAM_OE_N = 1'b0;
 	assign o_SRAM_LB_N = 1'b0;
@@ -173,7 +171,7 @@ module Top (
 		.i_stop(rec_stop),
 		.i_data(i_AUD_ADCDAT),
 		.o_address(addr_record),
-		.o_data(data_record),
+		.o_data(data_record)
 	);
 
 	// NL

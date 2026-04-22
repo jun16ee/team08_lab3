@@ -188,7 +188,7 @@ Top top0(
 
     // mode control
     .interpolation_method(SW[16]),
-    .fast_slow(SW[17])
+    .fast_slow(SW[17]),
 	
 	// AudDSP and SRAM
 	.o_SRAM_ADDR(SRAM_ADDR), // [19:0]
