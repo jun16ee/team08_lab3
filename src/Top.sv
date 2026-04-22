@@ -52,8 +52,11 @@ module Top (
 	// output       o_LCD_BLON,
 
 	// LED
-	output  [8:0] o_ledg
+	output  [8:0] o_ledg,
 	// output [17:0] o_ledr
+
+	// debug
+	output [19:0] o_recd_addr
 );
 
 	// debug LED
@@ -63,7 +66,7 @@ module Top (
 	assign o_ledg[3] = opr_state_r == S_RECD_PAUSE;
 	assign o_ledg[4] = opr_state_r == S_PLAY;
 	assign o_ledg[5] = opr_state_r == S_PLAY_PAUSE;
-
+	assign o_recd_addr = recd_ptr;
 	// design the FSM and states as you like
 	typedef enum logic [2:0] {
 		S_IDLE       ,
@@ -205,7 +208,10 @@ module Top (
 			S_RECD: begin
 				case(1'b1)
 					i_key_2: opr_state_w = S_IDLE;
-					i_key_1: opr_state_w = S_PLAY;
+					i_key_1: begin
+						opr_state_w = S_PLAY;
+						read_addr_w = 20'd0;
+					end
 					i_key_0: opr_state_w = S_RECD_PAUSE;
 					default: opr_state_w = opr_state_r;
 				endcase
@@ -214,7 +220,10 @@ module Top (
 			S_RECD_PAUSE: begin
 				case(1'b1)
 					i_key_2: opr_state_w = S_IDLE;
-					i_key_1: opr_state_w = S_PLAY;
+					i_key_1: begin
+						opr_state_w = S_PLAY;
+						read_addr_w = 20'd0;
+					end
 					i_key_0: opr_state_w = S_RECD;
 					default: opr_state_w = opr_state_r;
 				endcase
