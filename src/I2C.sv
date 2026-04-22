@@ -65,7 +65,7 @@ module I2cInitializer (
     assign o_sclk = SCL_r;
     assign o_sdat = SDA_r;
     assign o_oen = oen_r;
-    assign o_finish = fin_r;
+    assign o_finished = fin_r;
 
     // ========== FSM ==========
     // ---- Current State Logic ----
@@ -77,6 +77,7 @@ module I2cInitializer (
             data_word_idx_r <= 0;
             SCL_r <= 1;
             SDA_r <= 1;
+            oen_r <= 0;
             fin_r <= 0;
         end else begin
             state_r <= state_w;
@@ -85,6 +86,7 @@ module I2cInitializer (
             data_word_idx_r <= data_word_idx_w;
             SCL_r <= SCL_w;
             SDA_r <= SDA_w;
+            oen_r <= oen_w;
             fin_r <= fin_w;
         end
     end
@@ -135,6 +137,7 @@ module I2cInitializer (
                     data_bit_idx_w = data_bit_idx_r - 1;
                     if ((data_bit_idx_r == 8 || data_bit_idx_r == 0) && oen_r == 0) begin
                         oen_w = 1; // release SDA for ACK bit
+                        data_bit_idx_w = data_bit_idx_r;
                     end else begin
                         oen_w = 0; // drive SDA for data bits
                     end

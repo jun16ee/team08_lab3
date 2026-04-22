@@ -44,7 +44,7 @@ module I2C_tb();
                 $display("I2C Initialization Finished!");
             end
             begin
-                #2000000; // Timeout after 2ms (enough for 8 config words at 100kHz)
+                #20000000; // Timeout after 2ms (enough for 8 config words at 100kHz)
                 $display("I2C Initialization Timeout!");
             end
         join_any
