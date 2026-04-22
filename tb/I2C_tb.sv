@@ -15,7 +15,7 @@ module I2C_tb();
 
     I2cInitializer DUT(
         .i_rst_n(i_rst_n),
-        .i_clk_100k(i_clk_100k),
+        .i_clk(i_clk_100k),
         .i_start(i_start),
         .o_finished(o_finished),
         .o_sclk(o_sclk),
@@ -50,6 +50,6 @@ module I2C_tb();
         join_any
         $finish;
     end
-    
+
 
 endmodule

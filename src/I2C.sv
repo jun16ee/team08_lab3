@@ -37,15 +37,15 @@ module I2cInitializer (
     output o_sdat,
     output o_oen
 );
-    localparam logic [15:0] configBits [0:7] = `{
-        16`b000_0000_0_1001_0111,
-        16`b000_0001_0_1001_0111,
-        16`b000_0010_0_0111_1001
-        16`b000_0011_0_0111_1001,
-        16`b000_0100_0_0001_0101,
-        16`b000_0101_0_0000_0000,
-        16`b000_0110_0_0000_0000,
-        16`b000_0111_0_0100_0010
+    localparam logic [15:0] configBits [0:7] = '{
+        16'b000_0000_0_1001_0111,
+        16'b000_0001_0_1001_0111,
+        16'b000_0010_0_0111_1001,
+        16'b000_0011_0_0111_1001,
+        16'b000_0100_0_0001_0101,
+        16'b000_0101_0_0000_0000,
+        16'b000_0110_0_0000_0000,
+        16'b000_0111_0_0100_0010
     };
 
     typedef enum logic [1:0] {
@@ -58,27 +58,34 @@ module I2cInitializer (
     state_t state_r, state_w;
 
 
-    logic SCL_r, SCL_w, SDA_r, SDA_w, oen_r, oen_w;
+    logic SCL_r, SCL_w, SDA_r, SDA_w, oen_r, oen_w, fin_r, fin_w;
     logic [2:0] scl_cnt_r, scl_cnt_w;
     logic [3:0] data_bit_idx_r, data_bit_idx_w;
     logic [4:0] data_word_idx_r, data_word_idx_w; // index for configBits
-    assign o_sclk = SCL;
-    assign o_sdat = SDA;
-    assign o_oen = oen;
+    assign o_sclk = SCL_r;
+    assign o_sdat = SDA_r;
+    assign o_oen = oen_r;
+    assign o_finish = fin_r;
 
     // ========== FSM ==========
     // ---- Current State Logic ----
-    always_ff @(posdege i_clk or negedge i_rst_n) begin
+    always_ff @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
             state_r <= IDLE;
             scl_cnt_r <= 0;
             data_bit_idx_r <= 0;
             data_word_idx_r <= 0;
+            SCL_r <= 1;
+            SDA_r <= 1;
+            fin_r <= 0;
         end else begin
             state_r <= state_w;
             scl_cnt_r <= scl_cnt_w;
             data_bit_idx_r <= data_bit_idx_w;
             data_word_idx_r <= data_word_idx_w;
+            SCL_r <= SCL_w;
+            SDA_r <= SDA_w;
+            fin_r <= fin_w;
         end
     end
     // ---- Next State Logic ----
@@ -91,9 +98,11 @@ module I2cInitializer (
         oen_w = oen_r;
         SDA_w = SDA_r;
         SCL_w = SCL_r;
+        fin_w = fin_r;
 
         case (state_r)
             IDLE: begin
+                fin_w = 0;
                 if (i_start) begin
                     state_w = START;
                 end
@@ -148,12 +157,12 @@ module I2cInitializer (
                 if (scl_cnt_r == 3) begin
                     SDA_w = 1; // release SDA while SCL is high
                     oen_w = 0; // release SDA
-                    o_finished = 1;
+                    fin_w = 1;
                     state_w = IDLE;
                 end else begin
                     scl_cnt_w = scl_cnt_r + 1;
                 end
-                
+
 
 
             end
