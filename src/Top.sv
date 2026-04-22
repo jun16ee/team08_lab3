@@ -220,12 +220,14 @@ module Top (
 
 			S_PLAY: begin
 				if (recd_ptr) opr_state_w = S_PLAY_PAUSE;
-				case(1'b1)
-					i_key_2: opr_state_w = S_IDLE;
-					i_key_1: opr_state_w = S_PLAY_PAUSE;
-					i_key_0: opr_state_w = S_RECD;
-					default: opr_state_w = opr_state_r;
-				endcase
+				else begin
+					case(1'b1)
+						i_key_2: opr_state_w = S_IDLE;
+						i_key_1: opr_state_w = S_PLAY_PAUSE;
+						i_key_0: opr_state_w = S_RECD;
+						default: opr_state_w = opr_state_r;
+					endcase
+				end
 			end
 
 			S_PLAY_PAUSE: begin
