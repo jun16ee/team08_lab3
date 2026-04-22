@@ -190,12 +190,16 @@ module Top (
 	always_comb begin
 		opr_state_w = opr_state_r;
 		case (opr_state_r)
-			S_IDLE: begin //reset
-				opr_state_w = S_I2C;
+			S_IDLE: begin
+				case(1'b1)
+					i_key_1: opr_state_w = S_PLAY;
+					i_key_0: opr_state_w = S_RECD;
+					default: opr_state_w = opr_state_r;
+				endcase
 			end
 
 			S_I2C: begin
-				if (I2C_finished) opr_state_w = S_RECD;
+				if (I2C_finished) opr_state_w = S_IDLE;
 			end
 
 			S_RECD: begin
@@ -217,15 +221,15 @@ module Top (
 			end
 
 			S_PLAY: begin
-				if (recd_ptr) opr_state_w = S_PLAY_PAUSE;
-				else begin
+				// if (recd_ptr) opr_state_w = S_PLAY_PAUSE;
+				// else begin
 					case(1'b1)
 						i_key_2: opr_state_w = S_IDLE;
 						i_key_1: opr_state_w = S_PLAY_PAUSE;
 						i_key_0: opr_state_w = S_RECD;
 						default: opr_state_w = opr_state_r;
 					endcase
-				end
+				// end
 			end
 
 			S_PLAY_PAUSE: begin
