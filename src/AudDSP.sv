@@ -20,7 +20,7 @@ module AudDSP(
     // debug
     output [2:0] dsp_state
 );
-    assign state = dsp_state_r;
+    assign dsp_state = dsp_state_r;
 
     typedef enum logic [2:0] {
         S_RESET,
