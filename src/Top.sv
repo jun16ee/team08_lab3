@@ -247,7 +247,7 @@ module Top (
 		endcase
 	end
 
-	// OL
+	// state control
 	assign rec_pause = (opr_state_r==S_RECD_PAUSE);
 	assign rec_recd  = (opr_state_r==S_RECD);
 	assign rec_stop  = !(rec_pause || rec_recd);
