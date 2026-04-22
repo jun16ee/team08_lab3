@@ -52,7 +52,7 @@ module Top (
 	// output       o_LCD_BLON,
 
 	// LED
-	output  [8:0] o_ledg,
+	output  [8:0] o_ledg
 	// output [17:0] o_ledr
 );
 
