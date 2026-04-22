@@ -15,7 +15,7 @@ module AudDSP(
 	input i_daclrck, //根據這個決定現在要送左或右聲道(1=右)，每個週期傳一次data
 	input [15:0] i_sram_data, // 讀SRAM存的音檔
 	output [15:0] o_dac_data, //給喇叭 1 daclrck cycle傳一次
-    output o_en,
+    output o_en, //告訴下游audio player 可以播了
 	output [19:0] o_sram_addr, //要讀sram哪裡的資料 0~2^20-1
     // debug
     output [2:0] dsp_state
@@ -39,7 +39,7 @@ module AudDSP(
     
     assign o_sram_addr = read_addr_r;
     assign o_dac_data = (dsp_state_r==S_READY || dsp_state_r==S_OUTPUT) ? op_r : 16'd0;
-    assign o_en = (dsp_state_r!=S_RESET) && i_daclrck;
+    assign o_en = (dsp_state_r != S_RESET) && (dsp_state_r != S_PAUSED);
    
     logic [15:0] interpolation_value;
     interpolation_calculator u_interpolation_calculator( // out = D0 + (D1 - D0) * C/S
@@ -70,16 +70,17 @@ module AudDSP(
                     // 不用把addr歸零initialize
                 end
             end
-            S_PROCESS: begin
+            S_PROCESS: begin //wait for SRAM
                 dsp_state_w = S_READY;
+                
+            end
+            S_READY: begin
+                if (i_daclrck) dsp_state_w = S_OUTPUT;
                 if(i_slow_1) begin
                     op_w = interpolation_value;
                 end else begin
                     op_w = rdata_now_r;
                 end
-            end
-            S_READY: begin
-                if (i_daclrck) dsp_state_w = S_OUTPUT;
             end
             S_OUTPUT: begin
                 if (!i_daclrck) begin 
@@ -87,8 +88,7 @@ module AudDSP(
                         dsp_state_w = S_RESET;
                     end else if (i_pause) begin
                         dsp_state_w = S_PAUSED;
-                    // end else if (i_play)begin
-                    end else begin
+                    end else if (i_play)begin
                         dsp_state_w = S_PROCESS;
                         case(1'b1)
                             i_fast: begin
@@ -112,9 +112,9 @@ module AudDSP(
                             end
                         endcase
                     end
-                    // else begin //default
-                    //     dsp_state_w = S_RESET;
-                    // end
+                    else begin //default  不變
+                        dsp_state_w = dsp_state_r;
+                    end
                 end
             end
         endcase
