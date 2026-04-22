@@ -119,7 +119,7 @@ module Top (
 
 	// === I2cInitializer ===
 	// sequentially sent out settings to initialize WM8731 with I2C protocal
-	logic start_initI2C_r, start_initI2C_w;;
+	logic start_initI2C_r, start_initI2C_w;
 	I2cInitializer init0(
 		.i_rst_n(i_rst_n),
 		.i_clk(i_clk_100k),
@@ -178,7 +178,7 @@ module Top (
 	// NL
 	always_comb begin
 		opr_state_w = opr_state_r;
-		start_initI2C_w = start_initI2C_r
+		start_initI2C_w = start_initI2C_r;
 		case (opr_state_r)
 			S_IDLE: begin //reset
 				opr_state_w = S_I2C;
