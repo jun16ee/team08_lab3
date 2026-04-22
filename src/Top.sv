@@ -57,12 +57,12 @@ module Top (
 );
 
 	// debug LED
-	assign o_ledg[0] = S_IDLE;
-	assign o_ledg[1] = S_I2C;
-	assign o_ledg[2] = S_RECD;
-	assign o_ledg[3] = S_RECD_PAUSE;
-	assign o_ledg[4] = S_PLAY;
-	assign o_ledg[5] = S_PLAY_PAUSE;
+	assign o_ledg[0] = opr_state_r == S_IDLE;
+	assign o_ledg[1] = opr_state_r == S_I2C;
+	assign o_ledg[2] = opr_state_r == S_RECD;
+	assign o_ledg[3] = opr_state_r == S_RECD_PAUSE;
+	assign o_ledg[4] = opr_state_r == S_PLAY;
+	assign o_ledg[5] = opr_state_r == S_PLAY_PAUSE;
 
 	// design the FSM and states as you like
 	typedef enum logic [2:0] {
@@ -79,6 +79,7 @@ module Top (
 	logic i2c_oen, i2c_sdat;
 	logic [19:0] addr_record, addr_play;
 	logic [15:0] data_record, data_play, dac_data;
+	logic recd_ptr;
 
 	assign io_I2C_SDAT = (i2c_oen) ? i2c_sdat : 1'bz;
 
@@ -180,7 +181,8 @@ module Top (
 		.i_stop(rec_stop),
 		.i_data(i_AUD_ADCDAT),
 		.o_address(addr_record),
-		.o_data(data_record)
+		.o_data(data_record),
+		.o_stop_address(recd_ptr)
 	);
 
 	// NL
@@ -217,6 +219,7 @@ module Top (
 			end
 
 			S_PLAY: begin
+				if (recd_ptr) opr_state_w = S_
 				case(1'b1)
 					i_key_2: opr_state_w = S_IDLE;
 					i_key_1: opr_state_w = S_PLAY_PAUSE;
