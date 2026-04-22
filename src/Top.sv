@@ -128,11 +128,12 @@ module Top (
 
 	// === I2cInitializer ===
 	// sequentially sent out settings to initialize WM8731 with I2C protocal
-	logic start_initI2C_r, start_initI2C_w;
+	logic start_initI2C;
+	assign start_initI2C = opr_state_r == S_I2C;
 	I2cInitializer init0(
 		.i_rst_n(i_rst_n),
 		.i_clk(i_clk_100k),
-		.i_start(start_initI2C_r),
+		.i_start(start_initI2C),
 		.o_finished(I2C_finished),
 		.o_sclk(o_I2C_SCLK),
 		.o_sdat(i2c_sdat),
@@ -188,15 +189,12 @@ module Top (
 	// NL
 	always_comb begin
 		opr_state_w = opr_state_r;
-		start_initI2C_w = start_initI2C_r;
 		case (opr_state_r)
 			S_IDLE: begin //reset
 				opr_state_w = S_I2C;
-				start_initI2C_w = 1'b1;
 			end
 
 			S_I2C: begin
-				start_initI2C_w = 1'b0; //1st cycle會是1，之後變0
 				if (I2C_finished) opr_state_w = S_RECD;
 			end
 
@@ -255,12 +253,10 @@ module Top (
 
 	always_ff @(posedge i_AUD_BCLK or negedge i_rst_n) begin
 		if (!i_rst_n) begin
-			opr_state_r <= S_IDLE;
-			start_initI2C_r <= 1'b0;
+			opr_state_r <= S_I2C;
 		end
 		else begin
 			opr_state_r <= opr_state_w;
-			start_initI2C_r <= start_initI2C_w;
 		end
 	end
 
