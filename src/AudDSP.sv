@@ -16,9 +16,11 @@ module AudDSP(
 	input [15:0] i_sram_data, // 讀SRAM存的音檔
 	output [15:0] o_dac_data, //給喇叭 1 daclrck cycle傳一次
     output o_en,
-	output [19:0] o_sram_addr //要讀sram哪裡的資料 0~2^20-1
+	output [19:0] o_sram_addr, //要讀sram哪裡的資料 0~2^20-1
+    // debug
+    output [2:0] dsp_state
 );
-
+    assign state = dsp_state_r;
 
     typedef enum logic [2:0] {
         S_RESET,
@@ -27,6 +29,7 @@ module AudDSP(
         S_READY,
         S_OUTPUT
     } dsp_state_t;
+
 
     dsp_state_t dsp_state_r, dsp_state_w;
     logic [19:0] read_addr_r, read_addr_w;
