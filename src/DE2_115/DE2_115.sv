@@ -225,7 +225,7 @@ Top top0(
 	// .o_LCD_BLON(LCD_BLON),
 
 	// LED
-	// .o_ledg(LEDG), // [8:0]
+	.o_ledg(LEDG), // [8:0]
 	// .o_ledr(LEDR) // [17:0]
 );
 
