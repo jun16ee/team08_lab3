@@ -226,7 +226,7 @@ Top top0(
 
 	// LED
 	.o_ledg(LEDG), // [8:0]
-	// .o_ledr(LEDR) // [17:0]
+	.o_ledr(LEDR), // [17:0]
 	.o_recd_addr(debug_recd_addr)
 );
 logic [19:0] debug_recd_addr;

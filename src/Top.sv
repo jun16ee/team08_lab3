@@ -53,7 +53,7 @@ module Top (
 
 	// LED
 	output  [8:0] o_ledg,
-	// output [17:0] o_ledr
+	output [17:0] o_ledr,
 
 	// debug
 	output [19:0] o_recd_addr
@@ -67,6 +67,14 @@ module Top (
 	assign o_ledg[4] = opr_state_r == S_PLAY;
 	assign o_ledg[5] = opr_state_r == S_PLAY_PAUSE;
 	assign o_recd_addr = recd_ptr;
+	logic dsp_state;
+	assign o_ledr[0] = dsp_state == 3'b000;
+	assign o_ledr[1] = dsp_state == 3'b001;
+	assign o_ledr[2] = dsp_state == 3'b010;
+	assign o_ledr[3] = dsp_state == 3'b011;
+	assign o_ledr[4] = dsp_state == 3'b100;
+	assign o_ledr[5] = dsp_state == 3'b101;
+
 	// design the FSM and states as you like
 	typedef enum logic [2:0] {
 		S_IDLE       ,
@@ -160,7 +168,9 @@ module Top (
 		.i_sram_data(data_play),
 		.o_dac_data(dac_data),
 		.o_en(play_en),
-		.o_sram_addr(addr_play)
+		.o_sram_addr(addr_play),
+
+		.dsp_state(dsp_state)
 	);
 
 	// === AudPlayer ===
@@ -210,7 +220,7 @@ module Top (
 					i_key_2: opr_state_w = S_IDLE;
 					i_key_1: begin
 						opr_state_w = S_PLAY;
-						read_addr_w = 20'd0;
+						// read_addr_w = 20'd0;
 					end
 					i_key_0: opr_state_w = S_RECD_PAUSE;
 					default: opr_state_w = opr_state_r;
@@ -222,7 +232,7 @@ module Top (
 					i_key_2: opr_state_w = S_IDLE;
 					i_key_1: begin
 						opr_state_w = S_PLAY;
-						read_addr_w = 20'd0;
+						// read_addr_w = 20'd0;
 					end
 					i_key_0: opr_state_w = S_RECD;
 					default: opr_state_w = opr_state_r;
