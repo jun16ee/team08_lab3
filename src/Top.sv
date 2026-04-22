@@ -52,9 +52,17 @@ module Top (
 	// output       o_LCD_BLON,
 
 	// LED
-	// output  [8:0] o_ledg,
+	output  [8:0] o_ledg,
 	// output [17:0] o_ledr
 );
+
+	// debug LED
+	assign o_ledg[0] = S_IDLE;
+	assign o_ledg[1] = S_I2C;
+	assign o_ledg[2] = S_RECD;
+	assign o_ledg[3] = S_RECD_PAUSE;
+	assign o_ledg[4] = S_PLAY;
+	assign o_ledg[5] = S_PLAY_PAUSE;
 
 	// design the FSM and states as you like
 	typedef enum logic [2:0] {
