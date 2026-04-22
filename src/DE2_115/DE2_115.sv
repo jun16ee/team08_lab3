@@ -209,7 +209,7 @@ Top top0(
 	.i_AUD_ADCLRCK(AUD_ADCLRCK),
 	.i_AUD_BCLK(AUD_BCLK),
 	.i_AUD_DACLRCK(AUD_DACLRCK),
-	.o_AUD_DACDAT(AUD_DACDAT)
+	.o_AUD_DACDAT(AUD_DACDAT),
 
 	// SEVENDECODER (optional display)
 	// .o_record_time(recd_time),

@@ -36,7 +36,7 @@ module Top (
 	inout  i_AUD_ADCLRCK,
 	inout  i_AUD_BCLK,
 	inout  i_AUD_DACLRCK,
-	output o_AUD_DACDAT
+	output o_AUD_DACDAT,
 
 	// SEVENDECODER (optional display)
 	// output [5:0] o_record_time,
