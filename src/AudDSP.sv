@@ -87,7 +87,8 @@ module AudDSP(
                         dsp_state_w = S_RESET;
                     end else if (i_pause) begin
                         dsp_state_w = S_PAUSED;
-                    end else if (i_play)begin
+                    // end else if (i_play)begin
+                    end else begin
                         dsp_state_w = S_PROCESS;
                         case(1'b1)
                             i_fast: begin
@@ -110,9 +111,10 @@ module AudDSP(
                                 slow_counter_w = 4'd0;
                             end
                         endcase
-                    end else begin //default
-                        dsp_state_w = S_RESET;
                     end
+                    // else begin //default
+                    //     dsp_state_w = S_RESET;
+                    // end
                 end
             end
         endcase
