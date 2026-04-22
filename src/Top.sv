@@ -79,7 +79,7 @@ module Top (
 	logic i2c_oen, i2c_sdat;
 	logic [19:0] addr_record, addr_play;
 	logic [15:0] data_record, data_play, dac_data;
-	logic recd_ptr;
+	logic [19:0] recd_ptr;
 
 	assign io_I2C_SDAT = (i2c_oen) ? i2c_sdat : 1'bz;
 
@@ -221,15 +221,15 @@ module Top (
 			end
 
 			S_PLAY: begin
-				// if (recd_ptr) opr_state_w = S_PLAY_PAUSE;
-				// else begin
+				if (addr_play >= recd_ptr) opr_state_w = S_PLAY_PAUSE;
+				else begin
 					case(1'b1)
 						i_key_2: opr_state_w = S_IDLE;
 						i_key_1: opr_state_w = S_PLAY_PAUSE;
 						i_key_0: opr_state_w = S_RECD;
 						default: opr_state_w = opr_state_r;
 					endcase
-				// end
+				end
 			end
 
 			S_PLAY_PAUSE: begin
