@@ -219,7 +219,7 @@ module Top (
 			end
 
 			S_PLAY: begin
-				if (recd_ptr) opr_state_w = S_
+				if (recd_ptr) opr_state_w = S_PLAY_PAUSE;
 				case(1'b1)
 					i_key_2: opr_state_w = S_IDLE;
 					i_key_1: opr_state_w = S_PLAY_PAUSE;
