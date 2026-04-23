@@ -1,3 +1,7 @@
+`include "../src/AudDSP.sv"
+`include "../src/AudRecorder.sv"
+`include "../src/AudPlayer.sv"
+`include "../src/i2c_answer.sv"
 module Top (
 	input i_rst_n, // key3
 	input i_clk,
@@ -14,8 +18,8 @@ module Top (
 	input i_speed7,
 	input i_speed8,
 
-	input interpolation_method,
-	input fast_slow, // f1/s0，speed==1的話哪個都沒差
+	input i_interpolation_method,
+	input i_fast_slow, // f1/s0，speed==1的話哪個都沒差
 	
 	// AudDSP and SRAM
 	output [19:0] o_SRAM_ADDR,
@@ -56,25 +60,11 @@ module Top (
 	output [17:0] o_ledr,
 
 	// debug
-	output [19:0] o_recd_addr
+	output [19:0] o_recd_addr,
+	output [15:0] o_data_play
 );
 	
-	logic [19:0] recd_ptr;
-	// debug LED
-	assign o_ledg[0] = opr_state_r == S_IDLE;
-	assign o_ledg[1] = opr_state_r == S_I2C;
-	assign o_ledg[2] = opr_state_r == S_RECD;
-	assign o_ledg[3] = opr_state_r == S_RECD_PAUSE;
-	assign o_ledg[4] = opr_state_r == S_PLAY;
-	assign o_ledg[5] = opr_state_r == S_PLAY_PAUSE;
-	assign o_recd_addr = recd_ptr;
-	logic [2:0] dsp_state;
-	assign o_ledr[0] = dsp_state == 3'b000;
-	assign o_ledr[1] = dsp_state == 3'b001;
-	assign o_ledr[2] = dsp_state == 3'b010;
-	assign o_ledr[3] = dsp_state == 3'b011;
-	assign o_ledr[4] = dsp_state == 3'b100;
-	assign o_ledr[5] = dsp_state == 3'b101;
+	
 
 	// design the FSM and states as you like
 	typedef enum logic [2:0] {
@@ -115,6 +105,28 @@ module Top (
 	logic dsp_play, dsp_pause, dsp_stop;
 	logic rec_recd, rec_pause, rec_stop;
 	logic dsp_fast, dsp_slow0, dsp_slow1, normal;
+	logic [19:0] recd_ptr;
+
+	// debug LED
+	assign o_ledg[0] = opr_state_r == S_IDLE;
+	assign o_ledg[1] = opr_state_r == S_I2C;
+	assign o_ledg[2] = opr_state_r == S_RECD;
+	assign o_ledg[3] = opr_state_r == S_RECD_PAUSE;
+	assign o_ledg[4] = opr_state_r == S_PLAY;
+	assign o_ledg[5] = opr_state_r == S_PLAY_PAUSE;
+	assign o_recd_addr = recd_ptr;
+	logic [2:0] dsp_state;
+	assign o_ledr[0] = dsp_state == 3'b000;
+	assign o_ledr[1] = dsp_state == 3'b001;
+	assign o_ledr[2] = dsp_state == 3'b010;
+	assign o_ledr[3] = dsp_state == 3'b011;
+	assign o_ledr[4] = dsp_state == 3'b100;
+	assign o_ledr[5] = dsp_state == 3'b101;
+	assign o_data_play = data_play;
+
+
+
+
 	// speed
 	logic [3:0] speedx;
 	always_comb begin
@@ -133,9 +145,9 @@ module Top (
 			end
 		endcase
 	end
-	assign dsp_fast  = !normal && fast_slow;
-	assign dsp_slow0 = !normal && !fast_slow && !interpolation_method;
-	assign dsp_slow1 = !normal && !fast_slow && interpolation_method;
+	assign dsp_fast  = !normal && i_fast_slow;
+	assign dsp_slow0 = !normal && !i_fast_slow && !i_interpolation_method;
+	assign dsp_slow1 = !normal && !i_fast_slow && i_interpolation_method;
 
 	// === I2cInitializer ===
 	// sequentially sent out settings to initialize WM8731 with I2C protocal

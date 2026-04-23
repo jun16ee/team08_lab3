@@ -171,6 +171,8 @@ Debounce deb2(
 	.o_neg(key2down) 
 );
 
+logic [19:0] debug_recd_addr;
+logic [15:0] data_play;
 Top top0(
 	.i_rst_n(KEY[3]),
 	.i_clk(CLK_12M),
@@ -187,8 +189,8 @@ Top top0(
     .i_speed8(SW[6]),
 
     // mode control
-    .interpolation_method(SW[16]),
-    .fast_slow(SW[17]),
+    .i_interpolation_method(SW[16]),
+    .i_fast_slow(SW[17]),
 	
 	// AudDSP and SRAM
 	.o_SRAM_ADDR(SRAM_ADDR), // [19:0]
@@ -227,9 +229,17 @@ Top top0(
 	// LED
 	.o_ledg(LEDG), // [8:0]
 	.o_ledr(LEDR), // [17:0]
-	.o_recd_addr(debug_recd_addr)
+	.o_recd_addr(debug_recd_addr),
+	.o_data_play(dataplay)
 );
-logic [19:0] debug_recd_addr;
+
+Display16Bit debug_display_inst (
+	.i_data (data_play), // 把 data_play 餵進去
+	.o_hex3 (HEX3),
+	.o_hex2 (HEX2),
+	.o_hex1 (HEX1),
+	.o_hex0 (HEX0)
+);
 // SevenHexDecoder seven_dec0(
 // 	.i_num(play_time),
 // 	.o_seven_ten(HEX1),
