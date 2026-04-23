@@ -58,7 +58,8 @@ module Top (
 	// debug
 	output [19:0] o_recd_addr
 );
-
+	
+	logic [19:0] recd_ptr;
 	// debug LED
 	assign o_ledg[0] = opr_state_r == S_IDLE;
 	assign o_ledg[1] = opr_state_r == S_I2C;
@@ -67,7 +68,7 @@ module Top (
 	assign o_ledg[4] = opr_state_r == S_PLAY;
 	assign o_ledg[5] = opr_state_r == S_PLAY_PAUSE;
 	assign o_recd_addr = recd_ptr;
-	logic dsp_state;
+	logic [2:0] dsp_state;
 	assign o_ledr[0] = dsp_state == 3'b000;
 	assign o_ledr[1] = dsp_state == 3'b001;
 	assign o_ledr[2] = dsp_state == 3'b010;
@@ -90,7 +91,6 @@ module Top (
 	logic i2c_oen, i2c_sdat;
 	logic [19:0] addr_record, addr_play;
 	logic [15:0] data_record, data_play, dac_data;
-	logic [19:0] recd_ptr;
 
 	assign io_I2C_SDAT = (i2c_oen) ? i2c_sdat : 1'bz;
 
