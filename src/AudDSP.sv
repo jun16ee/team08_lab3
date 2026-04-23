@@ -57,6 +57,7 @@ module AudDSP(
         dsp_state_w = dsp_state_r;
         read_addr_w = read_addr_r;
         rdata_now_w = rdata_now_r;
+        rdata_nxt_w = rdata_nxt_r;
         slow_counter_w = slow_counter_r;
         wait_SRAM_counter_w = wait_SRAM_counter_r;
         op_w = op_r;
@@ -74,8 +75,9 @@ module AudDSP(
                 end
             end
             S_PROCESS: begin //wait for SRAM
-                if (wait_SRAM_counter_r == 3'd4) begin
+                if (wait_SRAM_counter_r == 3'd7) begin
                     dsp_state_w = S_READY;
+                    rdata_nxt_w = i_sram_data;
                     wait_SRAM_counter_w = 3'd0;
                 end else begin 
                     wait_SRAM_counter_w = wait_SRAM_counter_r + 1'b1;
@@ -140,7 +142,7 @@ module AudDSP(
         else begin
             dsp_state_r <= dsp_state_w;
             rdata_now_r <= rdata_now_w;
-            rdata_nxt_r <= i_sram_data;
+            rdata_nxt_r <= rdata_nxt_w; // i_sram_data;
             read_addr_r <= read_addr_w;
             op_r <= op_w;
             slow_counter_r <= slow_counter_w;
