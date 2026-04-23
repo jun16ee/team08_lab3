@@ -61,7 +61,8 @@ module Top (
 
 	// debug
 	output [19:0] o_recd_addr,
-	output [15:0] o_data_play
+	output [15:0] o_data_play,
+	output [15:0] o_data_record
 );
 	
 	
@@ -122,7 +123,6 @@ module Top (
 	assign o_ledr[3] = dsp_state == 3'b011;
 	assign o_ledr[4] = dsp_state == 3'b100;
 	assign o_ledr[5] = dsp_state == 3'b101;
-	assign o_data_play = data_play;
 
 
 
@@ -294,5 +294,33 @@ module Top (
 			opr_state_r <= opr_state_w;
 		end
 	end
-
+	
+	// debug
+	// ===============================================================
+    // 七段顯示器除錯邏輯：畫面更新頻率限制器 (Refresh Rate Limiter)
+    // ===============================================================
+    
+    logic [23:0] refresh_cnt;        // 用來數時脈的計數器
+    logic [15:0] display_data_play_locked, display_data_record_locked; // 用來「定格」畫面的暫存器
+	
+	assign o_data_play = display_data_play_locked;
+	assign o_data_record = display_data_record_locked;
+    always_ff @(posedge i_AUD_BCLK or negedge i_rst_n) begin
+        if (!i_rst_n) begin
+            refresh_cnt <= 24'd0;
+            display_data_play_locked <= 16'd0;
+            display_data_record_locked <= 16'd0;
+        end else begin
+            // 假設 BCLK 是 1.536 MHz，數到 150,000 大約是 0.1 秒 (10 Hz)
+            // 如果你覺得畫面跳太快，就把這個數值調大 (例如 300_000)
+            // 如果覺得畫面卡卡的，就調小 (例如 50_000)
+            if (refresh_cnt >= 24'd150_000) begin
+                refresh_cnt <= 24'd0;
+                display_data_play_locked <= data_play; // 快門按下去，截取當下的 data_play
+                display_data_record_locked <= data_record; // 快門按下去，截取當下的 data_play
+            end else begin
+                refresh_cnt <= refresh_cnt + 24'd1;
+            end
+        end
+    end
 endmodule

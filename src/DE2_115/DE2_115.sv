@@ -172,7 +172,7 @@ Debounce deb2(
 );
 
 logic [19:0] debug_recd_addr;
-logic [15:0] data_play;
+logic [15:0] data_play, data_record;
 Top top0(
 	.i_rst_n(KEY[3]),
 	.i_clk(CLK_12M),
@@ -230,15 +230,24 @@ Top top0(
 	.o_ledg(LEDG), // [8:0]
 	.o_ledr(LEDR), // [17:0]
 	.o_recd_addr(debug_recd_addr),
-	.o_data_play(dataplay)
+	.o_data_play(dataplay),
+	.o_data_record(data_record)
 );
 
-Display16Bit debug_display_inst (
+Display16Bit debug_play_inst (
 	.i_data (data_play), // 把 data_play 餵進去
 	.o_hex3 (HEX3),
 	.o_hex2 (HEX2),
 	.o_hex1 (HEX1),
 	.o_hex0 (HEX0)
+);
+
+Display16Bit debug_recd_inst (
+	.i_data (data_record), // 把 data_record 餵進去
+	.o_hex3 (HEX7),
+	.o_hex2 (HEX6),
+	.o_hex1 (HEX5),
+	.o_hex0 (HEX4)
 );
 // SevenHexDecoder seven_dec0(
 // 	.i_num(play_time),
