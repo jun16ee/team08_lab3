@@ -262,13 +262,13 @@ Display16Bit debug_recd_inst (
 // );
 
 // comment those are use for display
-assign HEX0 = '1;
-assign HEX1 = '1;
-assign HEX2 = '1;
-assign HEX3 = '1;
-assign HEX4 = '1;
-assign HEX5 = '1;
-assign HEX6 = '1;
-assign HEX7 = '1;
+// assign HEX0 = '1;
+// assign HEX1 = '1;
+// assign HEX2 = '1;
+// assign HEX3 = '1;
+// assign HEX4 = '1;
+// assign HEX5 = '1;
+// assign HEX6 = '1;
+// assign HEX7 = '1;
 
 endmodule
