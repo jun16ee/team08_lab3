@@ -230,7 +230,7 @@ Top top0(
 	.o_ledg(LEDG), // [8:0]
 	.o_ledr(LEDR), // [17:0]
 	.o_recd_addr(debug_recd_addr),
-	.o_data_play(dataplay),
+	.o_data_play(data_play),
 	.o_data_record(data_record)
 );
 
