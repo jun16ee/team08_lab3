@@ -24,8 +24,8 @@ module AudDSP(
     typedef enum logic [2:0] {
         S_RESET,
         S_PAUSED,
-        S_PROCESS,
-        S_READY,
+        S_SRAM,
+        S_COMPUTE,
         S_OUTPUT
     } dsp_state_t;
 
@@ -34,13 +34,13 @@ module AudDSP(
     logic [19:0] read_addr_r, read_addr_w;
     logic [15:0] op_r, op_w;
     logic [3:0] slow_counter_w, slow_counter_r;
-    logic [15:0] rdata_nxt_r, rdata_now_r, rdata_now_w;
+    logic [15:0] rdata_nxt_r, rdata_nxt_w, rdata_now_r, rdata_now_w;
     logic [2:0] wait_SRAM_counter_w, wait_SRAM_counter_r;
 
 
     assign dsp_state = dsp_state_r;
     assign o_sram_addr = read_addr_r;
-    assign o_dac_data = (dsp_state_r==S_READY || dsp_state_r==S_OUTPUT) ? op_r : 16'd0;
+    assign o_dac_data = (dsp_state_r==S_COMPUTE || dsp_state_r==S_OUTPUT) ? op_r : 16'd0;
     assign o_en = (dsp_state_r != S_RESET) && (dsp_state_r != S_PAUSED);
    
     logic [15:0] interpolation_value;
@@ -64,26 +64,26 @@ module AudDSP(
         case(dsp_state_r)
             S_RESET: begin
                 if (!i_daclrck && i_play) begin
-                    dsp_state_w = S_PROCESS;
+                    dsp_state_w = S_SRAM;
                     read_addr_w = 20'd0; //重新開始了 要initialize
                 end
             end
             S_PAUSED: begin
                 if (!i_daclrck && i_play) begin
-                    dsp_state_w = S_PROCESS;
+                    dsp_state_w = S_SRAM;
                     // 不用把addr歸零initialize
                 end
             end
-            S_PROCESS: begin //wait for SRAM
+            S_SRAM: begin //wait for SRAM
                 if (wait_SRAM_counter_r == 3'd7) begin
-                    dsp_state_w = S_READY;
+                    dsp_state_w = S_COMPUTE;
                     rdata_nxt_w = i_sram_data;
                     wait_SRAM_counter_w = 3'd0;
                 end else begin 
                     wait_SRAM_counter_w = wait_SRAM_counter_r + 1'b1;
                 end
             end
-            S_READY: begin
+            S_COMPUTE: begin
                 if (i_daclrck) dsp_state_w = S_OUTPUT;
                 if(i_slow_1) begin
                     op_w = interpolation_value;
@@ -98,7 +98,7 @@ module AudDSP(
                     end else if (i_pause) begin
                         dsp_state_w = S_PAUSED;
                     end else if (i_play)begin
-                        dsp_state_w = S_PROCESS;
+                        dsp_state_w = S_SRAM;
                         case(1'b1)
                             i_fast: begin
                                 read_addr_w = read_addr_r + i_speed;
