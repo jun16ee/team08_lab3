@@ -2,7 +2,7 @@ module AudDSP(
 	input i_rst_n,
 	input i_clk, //每cylce傳一次data
     // one-hot (Top那邊維護，至少high其中一個)
-    // 一定在i_daclrck falling edge 變成stop或pause 
+    // 這個module一定在i_daclrck falling edge 變成reset或paused 
     input i_play,
 	input i_pause,
 	input i_stop,
@@ -20,7 +20,6 @@ module AudDSP(
     // debug
     output [2:0] dsp_state
 );
-    assign dsp_state = dsp_state_r;
 
     typedef enum logic [2:0] {
         S_RESET,
@@ -38,6 +37,8 @@ module AudDSP(
     logic [15:0] rdata_nxt_r, rdata_now_r, rdata_now_w;
     logic [2:0] wait_SRAM_counter_w, wait_SRAM_counter_r;
 
+
+    assign dsp_state = dsp_state_r;
     assign o_sram_addr = read_addr_r;
     assign o_dac_data = (dsp_state_r==S_READY || dsp_state_r==S_OUTPUT) ? op_r : 16'd0;
     assign o_en = (dsp_state_r != S_RESET) && (dsp_state_r != S_PAUSED);
