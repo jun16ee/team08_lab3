@@ -37,15 +37,17 @@ module I2cInitializer (
     output o_sdat,
     output o_oen
 );
-    localparam logic [15:0] configBits [0:7] = '{
-        16'b000_0000_0_1001_0111,
-        16'b000_0001_0_1001_0111,
-        16'b000_0010_0_0111_1001,
-        16'b000_0011_0_0111_1001,
-        16'b000_0100_0_0001_0101,
-        16'b000_0101_0_0000_0000,
-        16'b000_0110_0_0000_0000,
-        16'b000_0111_0_0100_0010
+    localparam logic [23:0] configBits [0:9] = '{
+        24'b0011_0100_000_0000_0_1001_0111,
+        24'b0011_0100_000_0001_0_1001_0111,
+        24'b0011_0100_000_0010_0_0111_1001,
+        24'b0011_0100_000_0011_0_0111_1001,
+        24'b0011_0100_000_0100_0_0001_0101,
+        24'b0011_0100_000_0101_0_0000_0000,
+        24'b0011_0100_000_0110_0_0000_0000,
+        24'b0011_0100_000_0111_0_0100_0010,
+        24'b0011_0100_000_1000_0_0001_1001,
+        24'b0011_0100_000_1001_0_0000_0001
     };
 
     typedef enum logic [1:0] {
@@ -114,7 +116,7 @@ module I2cInitializer (
                 SCL_w = 1;
                 oen_w = 0; // drive SDA
                 scl_cnt_w = 0;
-                data_bit_idx_w = 15; // start from MSB
+                data_bit_idx_w = 23; // start from MSB
                 data_word_idx_w = 0; // start from first config word
                 state_w = DATA;
             end
@@ -135,7 +137,7 @@ module I2cInitializer (
                 // move to next bit after SCL goes high
                 if (scl_cnt_r == 3) begin
                     data_bit_idx_w = data_bit_idx_r - 1;
-                    if ((data_bit_idx_r == 8 || data_bit_idx_r == 0) && oen_r == 0) begin
+                    if ((data_bit_idx_r == 16 || data_bit_idx_r == 8 || data_bit_idx_r == 0) && oen_r == 0) begin
                         oen_w = 1; // release SDA for ACK bit
                         data_bit_idx_w = data_bit_idx_r;
                     end else begin
@@ -146,7 +148,7 @@ module I2cInitializer (
                         data_word_idx_w = data_word_idx_r + 1;
                     end
                     // after sending all words, move to STOP state
-                    if (data_word_idx_r == 7 && data_bit_idx_r == 0 && oen_r == 1) begin
+                    if (data_word_idx_r == 9 && data_bit_idx_r == 0 && oen_r == 1) begin
                         state_w = STOP;
                     end
                 end
