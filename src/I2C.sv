@@ -66,7 +66,7 @@ module I2cInitializer (
     logic [4:0] data_bit_idx_r, data_bit_idx_w;
     logic [4:0] data_word_idx_r, data_word_idx_w; // index for configBits
     assign o_sclk = SCL_r;
-    assign o_sdat = SDA_r;
+    assign o_sdat = oen_r ? 1'bz : SDA_r;
     assign o_oen = oen_r;
     assign o_finished = fin_r;
 
@@ -117,18 +117,11 @@ module I2cInitializer (
                 SCL_w = 1;
                 oen_w = 0; // drive SDA
                 scl_cnt_w = 0;
-                data_bit_idx_w = 23; // start from MSB
+                data_bit_idx_w = 24; // start from MSB
                 data_word_idx_w = 0; // start from first config word
                 state_w = DATA;
             end
             DATA: begin
-                // update SCL
-                if (scl_cnt_r == 3) begin
-                    scl_cnt_w = 0;
-                end else begin
-                    scl_cnt_w = scl_cnt_r + 1;
-                end
-                SCL_w = (scl_cnt_w < 2) ? 0 : 1; // SCL low for 2 cycles, then high for 2 cycles
 
 
                 // move to next bit after SCL goes high
@@ -146,13 +139,21 @@ module I2cInitializer (
                         data_bit_idx_w = 23; // start from MSB of next word
                     end
                     // after sending all words, move to STOP state
-                    if (data_word_idx_r == 10 && data_bit_idx_r == 0 && oen_r == 1) begin
+                    if (data_word_idx_r == 9 && data_bit_idx_r == 0 && oen_r == 1) begin
                         state_w = STOP;
                     end
                 end
 
+                // update SCL
+                if (scl_cnt_r == 3) begin
+                    scl_cnt_w = 0;
+                end else begin
+                    scl_cnt_w = scl_cnt_r + 1;
+                end
+                SCL_w = (scl_cnt_w < 2) ? 0 : 1; // SCL low for 2 cycles, then high for 2 cycles
+
                 // update SDA when SCL is low
-                if (scl_cnt_r == 0) begin
+                if (scl_cnt_r == 0 && data_word_idx_w <= 9) begin
                     SDA_w = configBits[data_word_idx_w][data_bit_idx_w];
                 end
             end
