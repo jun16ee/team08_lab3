@@ -43,6 +43,7 @@ module I2cInitializer (
         24'b0011_0100_000_0010_0_0111_1001,
         24'b0011_0100_000_0011_0_0111_1001,
         24'b0011_0100_000_0100_0_0001_0101,
+
         24'b0011_0100_000_0101_0_0000_0000,
         24'b0011_0100_000_0110_0_0000_0000,
         24'b0011_0100_000_0111_0_0100_0010,
@@ -62,7 +63,7 @@ module I2cInitializer (
 
     logic SCL_r, SCL_w, SDA_r, SDA_w, oen_r, oen_w, fin_r, fin_w;
     logic [2:0] scl_cnt_r, scl_cnt_w;
-    logic [3:0] data_bit_idx_r, data_bit_idx_w;
+    logic [4:0] data_bit_idx_r, data_bit_idx_w;
     logic [4:0] data_word_idx_r, data_word_idx_w; // index for configBits
     assign o_sclk = SCL_r;
     assign o_sdat = SDA_r;
@@ -146,9 +147,10 @@ module I2cInitializer (
                     // move to next word after finishing current word
                     if (data_bit_idx_r == 0 && oen_r == 1) begin
                         data_word_idx_w = data_word_idx_r + 1;
+                        data_bit_idx_w = 23; // start from MSB of next word
                     end
                     // after sending all words, move to STOP state
-                    if (data_word_idx_r == 9 && data_bit_idx_r == 0 && oen_r == 1) begin
+                    if (data_word_idx_r == 10 && data_bit_idx_r == 0 && oen_r == 1) begin
                         state_w = STOP;
                     end
                 end
