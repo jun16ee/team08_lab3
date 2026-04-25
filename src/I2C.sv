@@ -123,20 +123,16 @@ module I2cInitializer (
             end
             DATA: begin
                 // update SCL
-                SCL_w = (scl_cnt_r < 2) ? 0 : 1; // SCL low for 2 cycles, then high for 2 cycles
                 if (scl_cnt_r == 3) begin
                     scl_cnt_w = 0;
                 end else begin
                     scl_cnt_w = scl_cnt_r + 1;
                 end
+                SCL_w = (scl_cnt_w < 2) ? 0 : 1; // SCL low for 2 cycles, then high for 2 cycles
 
-                // update SDA when SCL is low
-                if (SCL_r == 0) begin
-                    SDA_w = configBits[data_word_idx_r][data_bit_idx_r];
-                end
 
                 // move to next bit after SCL goes high
-                if (scl_cnt_r == 3) begin
+                if (scl_cnt_r == 0) begin
                     data_bit_idx_w = data_bit_idx_r - 1;
                     if ((data_bit_idx_r == 16 || data_bit_idx_r == 8 || data_bit_idx_r == 0) && oen_r == 0) begin
                         oen_w = 1; // release SDA for ACK bit
@@ -153,6 +149,11 @@ module I2cInitializer (
                     if (data_word_idx_r == 10 && data_bit_idx_r == 0 && oen_r == 1) begin
                         state_w = STOP;
                     end
+                end
+
+                // update SDA when SCL is low
+                if (scl_cnt_r == 0) begin
+                    SDA_w = configBits[data_word_idx_w][data_bit_idx_w];
                 end
             end
 
