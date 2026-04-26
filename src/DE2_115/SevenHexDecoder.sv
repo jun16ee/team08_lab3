@@ -134,18 +134,18 @@ module SevenHexDecoderState (
 /* The layout of seven segment display, 1: dark
  *    00
  *   5  1
- *    66		
+ *    66
  *   4  2
  *    33
  */
-	parameter P = 7'b0111000; // P for play
+	parameter P = 7'b0000110; // P for play
 	parameter A = 7'b0001000; // A for pause
 	parameter U = 7'b1000001; // U for record
 
-	parameter L = 7'b1111001; // L for idle
-	parameter Y = 7'b0010010; // Y for play
+	parameter L = 7'b1000111; // L for idle
+	parameter Y = 7'b0010001; // Y for play
 
-	parameter R = 7'b0100001; // R for record
+	parameter R = 7'b0001000; // R for record
 	parameter E = 7'b0000110; // E for error
 	parameter C = 7'b1000110; // C for record pause
 
