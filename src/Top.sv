@@ -41,6 +41,7 @@ module Top (
 	// SEVENDECODER (optional display)
 	// output [5:0] o_record_time,
 	// output [5:0] o_play_time,
+	
 
 	// LCD (optional display)
 	// input        i_clk_800k,
@@ -198,6 +199,19 @@ module Top (
 		.o_data(data_record),
 		.o_stop_address(recd_ptr)
 	);
+
+	// === Timer ===
+	// display o_SRAM_ADDR except IDLE and I2C with SevenHexDecoder
+	// o_SRAM_ADDR has 20 bits, WM8731 is 32k/s * 2 bytes/s = 64kB/s
+	// [0000 0]000 000_0 0000 0000
+	// o_SRAM_ADD[20:16] is 0 -> 31 second
+	SevenHexDecoder timer0 (
+		.i_en(!(opr_state_r == S_IDLE || opr_state_r == S_I2C)),
+		.i_hex(o_SRAM_ADD[20:16]),
+		.o_seven_ten(), 
+		.o_seven_one()  
+	);
+
 
 	// NL
 	always_comb begin
