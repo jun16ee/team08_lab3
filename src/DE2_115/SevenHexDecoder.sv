@@ -1,4 +1,5 @@
 module SevenHexDecoder (
+	input              i_en,  
 	input        [4:0] i_hex,
 	output logic [6:0] o_seven_ten,
 	output logic [6:0] o_seven_one
@@ -12,6 +13,7 @@ module SevenHexDecoder (
  *    33
  */
 
+parameter DX = 7'b1111111;
 parameter D0 = 7'b1000000;
 parameter D1 = 7'b1111001;
 parameter D2 = 7'b0100100;
@@ -22,6 +24,7 @@ parameter D6 = 7'b0000010;
 parameter D7 = 7'b1011000;
 parameter D8 = 7'b0000000;
 parameter D9 = 7'b0010000;
+parameter DERROR = 7'b0000110; // Error
 always_comb begin
 	case(i_hex)
 		5'h0:  begin o_seven_ten = D0; o_seven_one = D0; end
@@ -56,8 +59,13 @@ always_comb begin
 		5'h1d: begin o_seven_ten = D2; o_seven_one = D9; end
 		5'h1e: begin o_seven_ten = D3; o_seven_one = D0; end
 		5'h1f: begin o_seven_ten = D3; o_seven_one = D1; end
-		default: begin o_seven_ten = D0; o_seven_one = D0; end
+		default: begin o_seven_ten = DERROR; o_seven_one = DERROR; end
 	endcase
+
+	if (!i_en) begin
+		o_seven_ten = DX;
+		o_seven_one = DX;
+	end
 end
 
 endmodule
