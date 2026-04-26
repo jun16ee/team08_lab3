@@ -97,7 +97,7 @@ module Top (
 	assign o_SRAM_ADDR = (opr_state_r == S_RECD) ? addr_record : addr_play[19:0];
 	assign io_SRAM_DQ  = (opr_state_r == S_RECD) ? data_record : 16'dz; // sram_dq as output
 	assign data_play   = (opr_state_r != S_RECD) ? io_SRAM_DQ : 16'd0; // sram_dq as input
-	assign seven_hex_decoder_sram_addr = (opr_state_r == S_RECD) ? addr_rec_end : addr_play[19:0];
+	assign seven_hex_decoder_sram_addr = (opr_state_r == S_RECD || opr_state_r == S_RECD_PAUSE) ? addr_rec_end : addr_play[19:0];
 
 	// in S_RECD: dataplay = 0; io_SRAM_DQ = data_record (存東西進SRAM)
 	// not in S_RECD: dataplay = z; io_SRAM_DQ = z 
