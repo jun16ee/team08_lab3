@@ -217,6 +217,8 @@ Top top0(
 
 	.o_seven_timer_ten(HEX5),
 	.o_seven_timer_one(HEX4),
+
+	.o_seven_state({HEX3, HEX2, HEX1, HEX0}), // {state3, state2, state1, state0}),
 	// .o_record_time(recd_time),
 	// .o_play_time(play_time),
 

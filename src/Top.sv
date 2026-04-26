@@ -221,6 +221,12 @@ module Top (
 		.o_seven_num(o_seven_speed_num)
 	);
 
+	// === SevenHexDecoder for state display ===
+	SevenHexDecoderState state_decoder0 (
+		.i_state(opr_state_r),
+		.o_seven_state(o_seven_state)
+	);
+
 
 	// NL
 	always_comb begin
