@@ -212,8 +212,8 @@ Top top0(
 	.o_AUD_DACDAT(AUD_DACDAT),
 
 	// SEVENDECODER (optional display)
-	.o_seven_ten(HEX1),
-	.o_seven_one(HEX0),
+	.o_seven_timer_ten(HEX1),
+	.o_seven_timer_one(HEX0),
 	// .o_record_time(recd_time),
 	// .o_play_time(play_time),
 
