@@ -205,8 +205,8 @@ module Top (
 	SevenHexDecoder timer0 (
 		.i_en(!(opr_state_r == S_IDLE || opr_state_r == S_I2C)),
 		.i_hex(o_SRAM_ADD[20:16]),
-		.o_seven_ten(), 
-		.o_seven_one()
+		.o_seven_ten(o_seven_ten),
+		.o_seven_one(o_seven_one)
 	);
 
 
