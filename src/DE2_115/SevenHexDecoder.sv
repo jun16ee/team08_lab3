@@ -74,6 +74,7 @@ endmodule
 module SevenHexDecoderSpeed (
 	input              i_en,  
 	input              i_sign, // f1/s0
+	input              interpolation_method,
 	input        [3:0] i_speed,
 	output logic [6:0] o_seven_sign,
 	output logic [6:0] o_seven_num
@@ -98,6 +99,8 @@ parameter D7 = 7'b1011000;
 parameter D8 = 7'b0000000;
 parameter D9 = 7'b0010000;
 parameter DNEG = 7'b0111111; // -
+parameter DNEGNEG = 7'b0110111; // -_
+
 always_comb begin
 	case(i_speed)
 		4'h0:  o_seven_num = D0;
@@ -113,7 +116,7 @@ always_comb begin
 		default: o_seven_num = DX;
 	endcase	
 
-	o_seven_sign = (i_sign || i_speed == 4'h1 ? DX : DNEG);
+	o_seven_sign = (i_sign || i_speed == 4'h1 ? DX : (i_interpolation_method ? DNEGNEG : DNEG));
 	if (!i_en) begin
 		o_seven_sign = DX;
 		o_seven_num = DX;
