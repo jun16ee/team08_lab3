@@ -7,7 +7,7 @@ module AudPlayer(
 	output o_aud_dacdat // pass to wm8731
 );
     logic op_r, op_w; //op擋FF，剛好做到delay 1 cycle
-    assign o_aud_dacdat = op_r;
+    assign o_aud_dacdat = i_en ? op_r : 1'b0;
 
     typedef enum logic [1:0] {
         S_IDLE,
