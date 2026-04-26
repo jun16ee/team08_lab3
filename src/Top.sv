@@ -39,8 +39,9 @@ module Top (
 	output o_AUD_DACDAT,
 
 	// SEVENDECODER (optional display)
-	output [6:0] o_seven_ten,
-	output [6:0] o_seven_one,
+	output [6:0] o_seven_timer_ten,
+	output [6:0] o_seven_timer_one,
+	output [6:0] o_seven_speed,
 	// output [5:0] o_record_time,
 	// output [5:0] o_play_time,
 	
@@ -201,12 +202,12 @@ module Top (
 	// display o_SRAM_ADDR except IDLE and I2C with SevenHexDecoder
 	// o_SRAM_ADDR has 20 bits, WM8731 is 32k/s * 2 bytes/s = 64kB/s
 	// [0000 0]000 000_0 0000 0000
-	// o_SRAM_ADD[20:16] is 0 -> 31 second
+	// o_SRAM_ADDR[20:16] is 0 -> 31 second
 	SevenHexDecoder timer0 (
 		.i_en(!(opr_state_r == S_IDLE || opr_state_r == S_I2C)),
-		.i_hex(o_SRAM_ADD[20:16]),
-		.o_seven_ten(o_seven_ten),
-		.o_seven_one(o_seven_one)
+		.i_hex(o_SRAM_ADDR[20:16]),
+		.o_seven_ten(o_seven_timer_ten),
+		.o_seven_one(o_seven_timer_one)
 	);
 
 
