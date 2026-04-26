@@ -87,8 +87,6 @@ module SevenHexDecoderSpeed (
  */
 //                6543210
 parameter DX = 7'b1111111;
-parameter DF = 7'b0111000; // F for fast
-parameter DS = 7'b0010010; // S for slow
 parameter D0 = 7'b1000000;
 parameter D1 = 7'b1111001;
 parameter D2 = 7'b0100100;
@@ -99,6 +97,7 @@ parameter D6 = 7'b0000010;
 parameter D7 = 7'b1011000;
 parameter D8 = 7'b0000000;
 parameter D9 = 7'b0010000;
+parameter DNEG = 7'b0111111; // -
 always_comb begin
 	case(i_speed)
 		4'h0:  o_seven_num = D0;
@@ -114,7 +113,7 @@ always_comb begin
 		default: o_seven_num = DX;
 	endcase	
 
-	o_seven_sign = (i_speed != 1 ? (i_sign ? DF : DS) : DX);
+	o_seven_sign = (i_sign ? DX : DNEG);
 	if (!i_en) begin
 		o_seven_sign = DX;
 		o_seven_num = DX;
@@ -138,7 +137,7 @@ module SevenHexDecoderState (
  *   4  2
  *    33
  */
-	parameter P = 7'b0000110; // P for play
+	parameter P = 7'b0001100; // P for play
 	parameter A = 7'b0001000; // A for pause
 	parameter U = 7'b1000001; // U for record
 
@@ -150,11 +149,13 @@ module SevenHexDecoderState (
 	parameter C = 7'b1000110; // C for record pause
 
 	parameter DX = 7'b1111111; // blank
+	parameter DNEG = 7'b0111111; // -
+	parameter DBOTTOM = 7'b1110111; // -
 
 	always_comb begin
 		case(i_state)
-			3'b000: begin o_seven_state_1 = DX; o_seven_state_2 = DX; o_seven_state_3 = DX; o_seven_state_4 = DX; end
-			3'b001: begin o_seven_state_1 = DX; o_seven_state_2 = DX; o_seven_state_3 = DX; o_seven_state_4 = DX; end
+			3'b000: begin o_seven_state_1 = DNEG; o_seven_state_2 = DNEG; o_seven_state_3 = DNEG; o_seven_state_4 = DNEG; end
+			3'b001: begin o_seven_state_1 = DBOTTOM; o_seven_state_2 = DBOTTOM; o_seven_state_3 = DBOTTOM; o_seven_state_4 = DBOTTOM; end
 
 			3'b010: begin o_seven_state_1 = DX; o_seven_state_2 = R; o_seven_state_3 = E; o_seven_state_4 = C; end
 			3'b100: begin o_seven_state_1 = P;  o_seven_state_2 = L; o_seven_state_3 = A; o_seven_state_4 = Y; end
