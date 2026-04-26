@@ -90,12 +90,14 @@ module Top (
 	logic i2c_oen, i2c_sdat;
 	logic [19:0] addr_record, addr_play, addr_rec_end;
 	logic [15:0] data_record, data_play, dac_data;
+	logic [19:0] seven_hex_decoder_sram_addr;
 
 	assign io_I2C_SDAT = (i2c_oen) ? i2c_sdat : 1'bz;
 
 	assign o_SRAM_ADDR = (opr_state_r == S_RECD) ? addr_record : addr_play[19:0];
 	assign io_SRAM_DQ  = (opr_state_r == S_RECD) ? data_record : 16'dz; // sram_dq as output
 	assign data_play   = (opr_state_r != S_RECD) ? io_SRAM_DQ : 16'd0; // sram_dq as input
+	assign seven_hex_decoder_sram_addr = (opr_state_r == S_RECD) ? addr_rec_end : addr_play[19:0];
 
 	// in S_RECD: dataplay = 0; io_SRAM_DQ = data_record (存東西進SRAM)
 	// not in S_RECD: dataplay = z; io_SRAM_DQ = z 
@@ -205,7 +207,7 @@ module Top (
 	// o_SRAM_ADDR[19:15] is 0 -> 31 second
 	SevenHexDecoder timer0 (
 		.i_en(!(opr_state_r == S_IDLE || opr_state_r == S_I2C)),
-		.i_hex(o_SRAM_ADDR[19:15]),
+		.i_hex(seven_hex_decoder_sram_addr[19:15]),
 		.o_seven_ten(o_seven_timer_ten),
 		.o_seven_one(o_seven_timer_one)
 	);
