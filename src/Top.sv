@@ -219,6 +219,7 @@ module Top (
 	SevenHexDecoderSpeed speed_decoder0 (
 		.i_en(opr_state_r == S_PLAY || opr_state_r == S_PLAY_PAUSE), // only display speed when playing
 		.i_sign(fast_slow), // f1/s0
+		.i_interpolation_method(interpolation_method),
 		.i_speed(speedx),
 		.o_seven_sign(o_seven_speed_sign),
 		.o_seven_num(o_seven_speed_num)

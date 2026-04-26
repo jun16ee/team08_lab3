@@ -74,7 +74,7 @@ endmodule
 module SevenHexDecoderSpeed (
 	input              i_en,  
 	input              i_sign, // f1/s0
-	input              interpolation_method,
+	input              i_interpolation_method,
 	input        [3:0] i_speed,
 	output logic [6:0] o_seven_sign,
 	output logic [6:0] o_seven_num
