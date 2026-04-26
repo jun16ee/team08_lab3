@@ -113,7 +113,7 @@ always_comb begin
 		default: o_seven_num = DX;
 	endcase	
 
-	o_seven_sign = (i_sign ? DX : DNEG);
+	o_seven_sign = (i_sign || i_speed == 4'h1 ? DX : DNEG);
 	if (!i_en) begin
 		o_seven_sign = DX;
 		o_seven_num = DX;
