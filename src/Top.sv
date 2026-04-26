@@ -244,6 +244,7 @@ module Top (
 					i_key_0: opr_state_w = S_RECD_PAUSE;
 					default: opr_state_w = opr_state_r;
 				endcase
+				if (addr_rec_end >= 20'hFFFFF) opr_state_w = S_IDLE; //錄滿
 			end
 
 			S_RECD_PAUSE: begin
