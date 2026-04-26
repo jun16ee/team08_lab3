@@ -46,7 +46,7 @@ module Top (
 	output [6:0] o_seven_state_1,
 	output [6:0] o_seven_state_2,
 	output [6:0] o_seven_state_3,
-	output [6:0] o_seven_state_4
+	output [6:0] o_seven_state_4,
 	
 
 	// LCD (optional display)

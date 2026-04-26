@@ -221,7 +221,7 @@ Top top0(
 	.o_seven_state_1(HEX3),
 	.o_seven_state_2(HEX2),
 	.o_seven_state_3(HEX1),
-	.o_seven_state_4(HEX0)
+	.o_seven_state_4(HEX0),
 	// .o_record_time(recd_time),
 	// .o_play_time(play_time),
 
