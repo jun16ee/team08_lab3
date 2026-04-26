@@ -228,10 +228,9 @@ Top top0(
 
 	// LED
 	.o_ledg(LEDG), // [8:0]
-	.o_ledr(LEDR), // [17:0]
-	.o_recd_addr(debug_recd_addr)
+	.o_ledr(LEDR) // [17:0]
 );
-logic [19:0] debug_recd_addr;
+
 // SevenHexDecoder seven_dec0(
 // 	.i_num(play_time),
 // 	.o_seven_ten(HEX1),

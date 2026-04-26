@@ -4,7 +4,7 @@ module Top (
 	input i_key_0, // Record/Pause
 	input i_key_1, // Play/Pause
 	input i_key_2, // Stop
-	// input [3:0] i_speed, // design how user can decide mode on your own
+	// design how user can decide mode on your own
 	// one-hot priority(8>7>..>2)
 	input i_speed2,
 	input i_speed3,
@@ -56,13 +56,9 @@ module Top (
 
 	// LED
 	output  [8:0] o_ledg,
-	output [17:0] o_ledr,
-
-	// debug
-	output [19:0] o_recd_addr
+	output [17:0] o_ledr
 );
 	
-	logic [19:0] recd_ptr;
 	// debug LED
 	assign o_ledg[0] = opr_state_r == S_IDLE;
 	assign o_ledg[1] = opr_state_r == S_I2C;
@@ -70,14 +66,13 @@ module Top (
 	assign o_ledg[3] = opr_state_r == S_RECD_PAUSE;
 	assign o_ledg[4] = opr_state_r == S_PLAY;
 	assign o_ledg[5] = opr_state_r == S_PLAY_PAUSE;
-	assign o_recd_addr = recd_ptr;
-	logic [2:0] dsp_state;
-	assign o_ledr[0] = dsp_state == 3'b000;
-	assign o_ledr[1] = dsp_state == 3'b001;
-	assign o_ledr[2] = dsp_state == 3'b010;
-	assign o_ledr[3] = dsp_state == 3'b011;
-	assign o_ledr[4] = dsp_state == 3'b100;
-	assign o_ledr[5] = dsp_state == 3'b101;
+	// logic [2:0] dsp_state;
+	// assign o_ledr[0] = dsp_state == 3'b000;
+	// assign o_ledr[1] = dsp_state == 3'b001;
+	// assign o_ledr[2] = dsp_state == 3'b010;
+	// assign o_ledr[3] = dsp_state == 3'b011;
+	// assign o_ledr[4] = dsp_state == 3'b100;
+	// assign o_ledr[5] = dsp_state == 3'b101;
 
 	// design the FSM and states as you like
 	typedef enum logic [2:0] {
@@ -92,7 +87,7 @@ module Top (
 	opr_state_t opr_state_r, opr_state_w;
 
 	logic i2c_oen, i2c_sdat;
-	logic [19:0] addr_record, addr_play;
+	logic [19:0] addr_record, addr_play, addr_rec_end;
 	logic [15:0] data_record, data_play, dac_data;
 
 	assign io_I2C_SDAT = (i2c_oen) ? i2c_sdat : 1'bz;
@@ -115,10 +110,11 @@ module Top (
 	// you can design these as you like
 	logic play_en;
 	logic I2C_finished;
-	logic dsp_play, dsp_pause, dsp_stop;
-	logic rec_recd, rec_pause, rec_stop;
-	logic dsp_fast, dsp_slow0, dsp_slow1, normal;
-	// speed
+	logic dsp_play, dsp_pause, dsp_stop; //給DSP的control signal
+	logic dsp_fast, dsp_slow0, dsp_slow1, normal;  //給DSP的control signal
+	logic rec_recd, rec_pause, rec_stop; //給recorder的control signal
+	
+	// speed computation
 	logic [3:0] speedx;
 	always_comb begin
 		normal = 1'b0;
@@ -136,6 +132,7 @@ module Top (
 			end
 		endcase
 	end
+	// control signal computation
 	assign dsp_fast  = !normal && fast_slow;
 	assign dsp_slow0 = !normal && !fast_slow && !interpolation_method;
 	assign dsp_slow1 = !normal && !fast_slow && interpolation_method;
@@ -171,9 +168,7 @@ module Top (
 		.i_sram_data(data_play),
 		.o_dac_data(dac_data),
 		.o_en(play_en),
-		.o_sram_addr(addr_play),
-
-		.dsp_state(dsp_state)
+		.o_sram_addr(addr_play)
 	);
 
 	// === AudPlayer ===
@@ -199,7 +194,7 @@ module Top (
 		.i_data(i_AUD_ADCDAT),
 		.o_address(addr_record),
 		.o_data(data_record),
-		.o_stop_address(recd_ptr)
+		.o_stop_address(addr_rec_end)
 	);
 
 	// === Timer ===
@@ -221,8 +216,14 @@ module Top (
 		case (opr_state_r)
 			S_IDLE: begin
 				case(1'b1)
-					i_key_1: opr_state_w = S_PLAY;
-					i_key_0: opr_state_w = S_RECD;
+					i_key_1: begin
+						opr_state_w = S_PLAY;
+						// DSP 會從 S_RESET變PLAY addr_play會歸零 
+					end
+					i_key_0: begin
+						opr_state_w = S_RECD;
+						// Recorder 會從 S_IDLE變READ addr_record會歸零 
+					end
 					default: opr_state_w = opr_state_r;
 				endcase
 			end
@@ -236,7 +237,6 @@ module Top (
 					i_key_2: opr_state_w = S_IDLE;
 					i_key_1: begin
 						opr_state_w = S_PLAY;
-						// read_addr_w = 20'd0;
 					end
 					i_key_0: opr_state_w = S_RECD_PAUSE;
 					default: opr_state_w = opr_state_r;
@@ -248,7 +248,6 @@ module Top (
 					i_key_2: opr_state_w = S_IDLE;
 					i_key_1: begin
 						opr_state_w = S_PLAY;
-						// read_addr_w = 20'd0;
 					end
 					i_key_0: opr_state_w = S_RECD;
 					default: opr_state_w = opr_state_r;
@@ -256,7 +255,7 @@ module Top (
 			end
 
 			S_PLAY: begin
-				if (addr_play >= recd_ptr) opr_state_w = S_PLAY_PAUSE;
+				if (addr_play >= addr_rec_end) opr_state_w = S_IDLE; //播完
 				else begin
 					case(1'b1)
 						i_key_2: opr_state_w = S_IDLE;
