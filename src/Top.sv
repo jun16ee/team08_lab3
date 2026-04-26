@@ -41,9 +41,9 @@ module Top (
 	// SEVENDECODER (optional display)
 	output [6:0] o_seven_timer_ten,
 	output [6:0] o_seven_timer_one,
-	output [6:0] o_seven_speed,
-	// output [5:0] o_record_time,
-	// output [5:0] o_play_time,
+	output [6:0] o_seven_speed_sign,
+	output [6:0] o_seven_speed_num,
+	output [6:0] o_seven_state [3:0],
 	
 
 	// LCD (optional display)
@@ -205,11 +205,20 @@ module Top (
 	// o_SRAM_ADDR has 20 bits, WM8731 is 32k/s * 2 bytes/s = 64kB/s
 	// [0000 0]000 000_0 0000 0000
 	// o_SRAM_ADDR[19:15] is 0 -> 31 second
-	SevenHexDecoder timer0 (
+	SevenHexDecoderTimer timer0 (
 		.i_en(!(opr_state_r == S_IDLE || opr_state_r == S_I2C)),
 		.i_hex(seven_hex_decoder_sram_addr[19:15]),
 		.o_seven_ten(o_seven_timer_ten),
 		.o_seven_one(o_seven_timer_one)
+	);
+
+	// === SevenHexDecoder for speed display ===
+	SevenHexDecoderSpeed speed_decoder0 (
+		.i_en(opr_state_r == S_PLAY || opr_state_r == S_PLAY_PAUSE), // only display speed when playing
+		.i_sign(fast_slow), // f1/s0
+		.i_speed(speedx),
+		.o_seven_sign(o_seven_speed_sign),
+		.o_seven_num(o_seven_speed_num)
 	);
 
 

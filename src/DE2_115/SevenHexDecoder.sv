@@ -1,4 +1,4 @@
-module SevenHexDecoder (
+module SevenHexDecoderTimer (
 	input              i_en,  
 	input        [4:0] i_hex,
 	output logic [6:0] o_seven_ten,
@@ -68,4 +68,56 @@ always_comb begin
 	end
 end
 
+endmodule
+
+
+module SevenHexDecoderSpeed (
+	input              i_en,  
+	input              i_sign, // f1/s0
+	input        [3:0] i_speed,
+	output logic [6:0] o_seven_sign,
+	output logic [6:0] o_seven_num
+);
+/* The layout of seven segment display, 1: dark
+ *    00
+ *   5  1
+ *    66
+ *   4  2
+ *    33
+ */
+//                6543210
+parameter DX = 7'b1111111;
+parameter DF = 7'b0111000; // F for fast
+parameter DS = 7'b0010010; // S for slow
+parameter D0 = 7'b1000000;
+parameter D1 = 7'b1111001;
+parameter D2 = 7'b0100100;
+parameter D3 = 7'b0110000;
+parameter D4 = 7'b0011001;
+parameter D5 = 7'b0010010;
+parameter D6 = 7'b0000010;
+parameter D7 = 7'b1011000;
+parameter D8 = 7'b0000000;
+parameter D9 = 7'b0010000;
+always_comb begin
+	case(i_speed)
+		4'h0:  o_seven_num = D0;
+		4'h1:  o_seven_num = D1;
+		4'h2:  o_seven_num = D2;
+		4'h3:  o_seven_num = D3;		
+		4'h4:  o_seven_num = D4;
+		4'h5:  o_seven_num = D5;
+		4'h6:  o_seven_num = D6;
+		4'h7:  o_seven_num = D7;
+		4'h8:  o_seven_num = D8;
+		4'h9:  o_seven_num = D9;
+		default: o_seven_num = DX;
+	endcase	
+
+	o_seven_sign = (i_speed != 1 ? (i_sign ? DF : DS) : DX);
+	if (!i_en) begin
+		o_seven_sign = DX;
+		o_seven_num = DX;
+	end	
+end
 endmodule

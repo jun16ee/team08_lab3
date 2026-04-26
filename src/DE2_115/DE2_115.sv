@@ -212,8 +212,11 @@ Top top0(
 	.o_AUD_DACDAT(AUD_DACDAT),
 
 	// SEVENDECODER (optional display)
-	.o_seven_timer_ten(HEX1),
-	.o_seven_timer_one(HEX0),
+	.o_seven_speed_sign(HEX7),
+	.o_seven_speed_num(HEX6),
+
+	.o_seven_timer_ten(HEX5),
+	.o_seven_timer_one(HEX4),
 	// .o_record_time(recd_time),
 	// .o_play_time(play_time),
 
@@ -246,11 +249,11 @@ Top top0(
 // comment those are use for display
 // assign HEX0 = '1;
 // assign HEX1 = '1;
-assign HEX2 = '1;
-assign HEX3 = '1;
-assign HEX4 = '1;
-assign HEX5 = '1;
-assign HEX6 = '1;
-assign HEX7 = '1;
+// assign HEX2 = '1;
+// assign HEX3 = '1;
+// assign HEX4 = '1;
+// assign HEX5 = '1;
+// assign HEX6 = '1;
+// assign HEX7 = '1;
 
 endmodule
