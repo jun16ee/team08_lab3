@@ -37,15 +37,18 @@ module I2cInitializer (
     output o_sdat,
     output o_oen
 );
-    localparam logic [15:0] configBits [0:7] = '{
-        16'b000_0000_0_1001_0111,
-        16'b000_0001_0_1001_0111,
-        16'b000_0010_0_0111_1001,
-        16'b000_0011_0_0111_1001,
-        16'b000_0100_0_0001_0101,
-        16'b000_0101_0_0000_0000,
-        16'b000_0110_0_0000_0000,
-        16'b000_0111_0_0100_0010
+    localparam logic [23:0] configBits [0:9] = '{
+        24'b0011_0100_000_0000_0_1001_0111,
+        24'b0011_0100_000_0001_0_1001_0111,
+        24'b0011_0100_000_0010_0_0111_1001,
+        24'b0011_0100_000_0011_0_0111_1001,
+        24'b0011_0100_000_0100_0_0001_0101,
+
+        24'b0011_0100_000_0101_0_0000_0000,
+        24'b0011_0100_000_0110_0_0000_0000,
+        24'b0011_0100_000_0111_0_0100_0010,
+        24'b0011_0100_000_1000_0_0001_1001,
+        24'b0011_0100_000_1001_0_0000_0001
     };
 
     typedef enum logic [1:0] {
@@ -60,10 +63,10 @@ module I2cInitializer (
 
     logic SCL_r, SCL_w, SDA_r, SDA_w, oen_r, oen_w, fin_r, fin_w;
     logic [2:0] scl_cnt_r, scl_cnt_w;
-    logic [3:0] data_bit_idx_r, data_bit_idx_w;
+    logic [4:0] data_bit_idx_r, data_bit_idx_w;
     logic [4:0] data_word_idx_r, data_word_idx_w; // index for configBits
     assign o_sclk = SCL_r;
-    assign o_sdat = SDA_r;
+    assign o_sdat = oen_r ? 1'bz : SDA_r;
     assign o_oen = oen_r;
     assign o_finished = fin_r;
 
@@ -114,28 +117,17 @@ module I2cInitializer (
                 SCL_w = 1;
                 oen_w = 0; // drive SDA
                 scl_cnt_w = 0;
-                data_bit_idx_w = 15; // start from MSB
+                data_bit_idx_w = 24; // start from MSB
                 data_word_idx_w = 0; // start from first config word
                 state_w = DATA;
             end
             DATA: begin
-                // update SCL
-                SCL_w = (scl_cnt_r < 2) ? 0 : 1; // SCL low for 2 cycles, then high for 2 cycles
-                if (scl_cnt_r == 3) begin
-                    scl_cnt_w = 0;
-                end else begin
-                    scl_cnt_w = scl_cnt_r + 1;
-                end
 
-                // update SDA when SCL is low
-                if (SCL_r == 0) begin
-                    SDA_w = configBits[data_word_idx_r][data_bit_idx_r];
-                end
 
                 // move to next bit after SCL goes high
-                if (scl_cnt_r == 3) begin
+                if (scl_cnt_r == 0) begin
                     data_bit_idx_w = data_bit_idx_r - 1;
-                    if ((data_bit_idx_r == 8 || data_bit_idx_r == 0) && oen_r == 0) begin
+                    if ((data_bit_idx_r == 16 || data_bit_idx_r == 8 || data_bit_idx_r == 0) && oen_r == 0) begin
                         oen_w = 1; // release SDA for ACK bit
                         data_bit_idx_w = data_bit_idx_r;
                     end else begin
@@ -144,11 +136,25 @@ module I2cInitializer (
                     // move to next word after finishing current word
                     if (data_bit_idx_r == 0 && oen_r == 1) begin
                         data_word_idx_w = data_word_idx_r + 1;
+                        data_bit_idx_w = 23; // start from MSB of next word
                     end
                     // after sending all words, move to STOP state
-                    if (data_word_idx_r == 7 && data_bit_idx_r == 0 && oen_r == 1) begin
+                    if (data_word_idx_r == 9 && data_bit_idx_r == 0 && oen_r == 1) begin
                         state_w = STOP;
                     end
+                end
+
+                // update SCL
+                if (scl_cnt_r == 3) begin
+                    scl_cnt_w = 0;
+                end else begin
+                    scl_cnt_w = scl_cnt_r + 1;
+                end
+                SCL_w = (scl_cnt_w < 2) ? 0 : 1; // SCL low for 2 cycles, then high for 2 cycles
+
+                // update SDA when SCL is low
+                if (scl_cnt_r == 0 && data_word_idx_w <= 9) begin
+                    SDA_w = configBits[data_word_idx_w][data_bit_idx_w];
                 end
             end
 
