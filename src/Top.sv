@@ -39,6 +39,8 @@ module Top (
 	output o_AUD_DACDAT,
 
 	// SEVENDECODER (optional display)
+	output [6:0] o_seven_ten,
+	output [6:0] o_seven_one,
 	// output [5:0] o_record_time,
 	// output [5:0] o_play_time,
 	
@@ -209,7 +211,7 @@ module Top (
 		.i_en(!(opr_state_r == S_IDLE || opr_state_r == S_I2C)),
 		.i_hex(o_SRAM_ADD[20:16]),
 		.o_seven_ten(), 
-		.o_seven_one()  
+		.o_seven_one()
 	);
 
 
