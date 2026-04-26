@@ -43,7 +43,10 @@ module Top (
 	output [6:0] o_seven_timer_one,
 	output [6:0] o_seven_speed_sign,
 	output [6:0] o_seven_speed_num,
-	output [6:0] o_seven_state [3:0],
+	output [6:0] o_seven_state_1,
+	output [6:0] o_seven_state_2,
+	output [6:0] o_seven_state_3,
+	output [6:0] o_seven_state_4
 	
 
 	// LCD (optional display)
@@ -224,7 +227,10 @@ module Top (
 	// === SevenHexDecoder for state display ===
 	SevenHexDecoderState state_decoder0 (
 		.i_state(opr_state_r),
-		.o_seven_state(o_seven_state)
+		.o_seven_state_1(o_seven_state_1),
+		.o_seven_state_2(o_seven_state_2),
+		.o_seven_state_3(o_seven_state_3),
+		.o_seven_state_4(o_seven_state_4)
 	);
 
 

@@ -125,7 +125,10 @@ endmodule
 
 module SevenHexDecoderState (
 	input        [2:0] i_state,
-	output logic [6:0] o_seven_state [0:3]
+	output logic [6:0] o_seven_state_1,
+	output logic [6:0] o_seven_state_2,
+	output logic [6:0] o_seven_state_3,
+	output logic [6:0] o_seven_state_4
 );
 // state: 00-idle, 01-play, 10-record, 11-pause
 /* The layout of seven segment display, 1: dark
@@ -150,15 +153,14 @@ module SevenHexDecoderState (
 
 	always_comb begin
 		case(i_state)
-			3'b000: begin o_seven_state[0] = DX; o_seven_state[1] = DX; o_seven_state[2] = DX; o_seven_state[3] = DX; end
-			3'b001: begin o_seven_state[0] = DX; o_seven_state[1] = DX; o_seven_state[2] = DX; o_seven_state[3] = DX; end
+			3'b000: begin o_seven_state_1 = DX; o_seven_state_2 = DX; o_seven_state_3 = DX; o_seven_state_4 = DX; end
+			3'b001: begin o_seven_state_1 = DX; o_seven_state_2 = DX; o_seven_state_3 = DX; o_seven_state_4 = DX; end
 
-			3'b010: begin o_seven_state[0] = DX; o_seven_state[1] = R; o_seven_state[2] = E; o_seven_state[3] = C; end
-			3'b100: begin o_seven_state[0] = P;  o_seven_state[1] = L; o_seven_state[2] = A; o_seven_state[3] = Y; end
-
-			3'b011: begin o_seven_state[0] = DX; o_seven_state[1] = P; o_seven_state[2] = A; o_seven_state[3] = U; end
-			3'b101: begin o_seven_state[0] = DX; o_seven_state[1] = P; o_seven_state[2] = A; o_seven_state[3] = U; end
-			default: begin o_seven_state[0] = E; o_seven_state[1] = E; o_seven_state[2] = E; o_seven_state[3] = E; end
+			3'b010: begin o_seven_state_1 = DX; o_seven_state_2 = R; o_seven_state_3 = E; o_seven_state_4 = C; end
+			3'b100: begin o_seven_state_1 = P;  o_seven_state_2 = L; o_seven_state_3 = A; o_seven_state_4 = Y; end
+			3'b011: begin o_seven_state_1 = DX; o_seven_state_2 = P; o_seven_state_3 = A; o_seven_state_4 = U; end
+			3'b101: begin o_seven_state_1 = DX; o_seven_state_2 = P; o_seven_state_3 = A; o_seven_state_4 = U; end
+			default: begin o_seven_state_1 = E; o_seven_state_2 = E; o_seven_state_3 = E; o_seven_state_4 = E; end
 		endcase
 	end
 
