@@ -226,9 +226,16 @@ module Top (
 	);
 
 	// === SevenHexDecoder for state display ===
-	SevenHexDecoderState state_decoder0 (
-		.i_state({3{I2C_finished}}),
-		// .i_state(opr_state_r),
+	// SevenHexDecoderState state_decoder0 (
+	// 	.i_state(opr_state_r),
+	// 	.o_seven_state_1(o_seven_state_1),
+	// 	.o_seven_state_2(o_seven_state_2),
+	// 	.o_seven_state_3(o_seven_state_3),
+	// 	.o_seven_state_4(o_seven_state_4)
+	// );
+
+	SevenHexDecoderDebug state_debug0 (
+		.i_data(opr_state_w),
 		.o_seven_state_1(o_seven_state_1),
 		.o_seven_state_2(o_seven_state_2),
 		.o_seven_state_3(o_seven_state_3),
