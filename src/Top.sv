@@ -227,7 +227,8 @@ module Top (
 
 	// === SevenHexDecoder for state display ===
 	SevenHexDecoderState state_decoder0 (
-		.i_state(opr_state_r),
+		.i_state({3{I2C_finished}}),
+		// .i_state(opr_state_r),
 		.o_seven_state_1(o_seven_state_1),
 		.o_seven_state_2(o_seven_state_2),
 		.o_seven_state_3(o_seven_state_3),
