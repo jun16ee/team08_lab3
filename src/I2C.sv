@@ -51,11 +51,12 @@ module I2cInitializer (
         24'b0011_0100_000_1001_0_0000_0001
     };
 
-    typedef enum logic [1:0] {
+    typedef enum logic [2:0] {
         IDLE,
         START,
         DATA,
-        STOP
+        STOP,
+        FIN
     } state_t;
 
     state_t state_r, state_w;
@@ -167,13 +168,17 @@ module I2cInitializer (
                     SDA_w = 1; // release SDA while SCL is high
                     oen_w = 0; // release SDA
                     fin_w = 1;
-                    state_w = IDLE;
+                    state_w = FIN;
                 end else begin
                     scl_cnt_w = scl_cnt_r + 1;
                 end
 
 
 
+            end
+
+            FIN: begin
+                // stay in FIN state, waiting for reset
             end
 
 
