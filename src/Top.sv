@@ -235,7 +235,7 @@ module Top (
 	// );
 
 	SevenHexDecoderDebug state_debug0 (
-		.i_data(opr_state_w),
+		.i_data({opr_state_w[1:0], opr_state_r[1:0]}), // only display 4 states for easier debugging
 		.o_seven_state_1(o_seven_state_1),
 		.o_seven_state_2(o_seven_state_2),
 		.o_seven_state_3(o_seven_state_3),
