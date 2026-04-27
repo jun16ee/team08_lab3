@@ -28,6 +28,7 @@ module I2C_tb();
 
         $fsdbDumpfile("I2C_tb.fsdb");
         $fsdbDumpvars(0, I2C_tb);
+        # 10000
         i_rst_n = 0;
         i_clk_100k = 0;
         i_start = 0;
@@ -35,8 +36,7 @@ module I2C_tb();
         i_rst_n = 1; // Release reset
         #10000; // Wait for 10us
         i_start = 1; // Start the I2C initialization
-        #10000
-        i_start = 0; // Stop the start signal
+       
 
         fork
             begin
