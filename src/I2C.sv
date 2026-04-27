@@ -190,7 +190,7 @@ module I2cInitializer (
                         SCL_w = 0;
                     end
                     7: begin
-                        state_w = data_word_idx_r == 9 ? STOP : DATA;
+                        state_w = data_word_idx_r == 10 ? STOP : DATA;
                     end
                     default: begin
                         SDA_w = SDA_r;
