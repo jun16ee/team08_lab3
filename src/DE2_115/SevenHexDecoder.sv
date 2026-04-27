@@ -164,6 +164,7 @@ module SevenHexDecoderState (
 			3'b100: begin o_seven_state_1 = P;  o_seven_state_2 = L; o_seven_state_3 = A; o_seven_state_4 = Y; end
 			3'b011: begin o_seven_state_1 = DX; o_seven_state_2 = P; o_seven_state_3 = A; o_seven_state_4 = U; end
 			3'b101: begin o_seven_state_1 = DX; o_seven_state_2 = P; o_seven_state_3 = A; o_seven_state_4 = U; end
+			3'b111: begin o_seven_state_1 = A; o_seven_state_2 = A; o_seven_state_3 = A; o_seven_state_4 = A; end
 			default: begin o_seven_state_1 = E; o_seven_state_2 = E; o_seven_state_3 = E; o_seven_state_4 = E; end
 		endcase
 	end
