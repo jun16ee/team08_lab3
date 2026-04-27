@@ -70,6 +70,8 @@ module AudDSP(
                 if (!i_daclrck && i_play) begin
                     dsp_state_w = S_PROCESS;
                     // 不用把addr歸零initialize
+                end else if (!i_daclrck && i_stop) begin
+                    dsp_state_w = S_RESET;
                 end
             end
             S_PROCESS: begin //wait for SRAM

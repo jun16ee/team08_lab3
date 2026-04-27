@@ -55,6 +55,8 @@ module AudRecorder(  //只讀右聲道
                     read_counter_w = 4'd15;
                     read_finish_flag_w = 1'b0;
                     // 不用把addr歸零initialize
+                end else if (i_lrc && i_stop) begin
+                    state_w = S_IDLE;
                 end
             end
 
