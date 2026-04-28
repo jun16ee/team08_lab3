@@ -41,19 +41,19 @@ module AudRecorder(  //只讀右聲道
         read_finish_flag_w = read_finish_flag_r;
         case(state_r)
             S_IDLE: begin
+                read_counter_w = 4'd15;
+                read_finish_flag_w = 1'b0;
+                write_addr_w = 20'd0; //重新開始了 要initialize
                 if (i_lrc && i_rec) begin
                     state_w = S_READ;
-                    read_counter_w = 4'd15;
-                    read_finish_flag_w = 1'b0;
-                    write_addr_w = 20'd0; //重新開始了 要initialize
                 end
             end
 
             S_PAUSED: begin
+                read_counter_w = 4'd15;
+                read_finish_flag_w = 1'b0;
                 if (i_lrc && i_rec) begin
                     state_w = S_READ;
-                    read_counter_w = 4'd15;
-                    read_finish_flag_w = 1'b0;
                     // 不用把addr歸零initialize
                 end else if (i_lrc && i_stop) begin
                     state_w = S_IDLE;
