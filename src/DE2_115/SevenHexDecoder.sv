@@ -164,8 +164,47 @@ module SevenHexDecoderState (
 			3'b100: begin o_seven_state_1 = P;  o_seven_state_2 = L; o_seven_state_3 = A; o_seven_state_4 = Y; end
 			3'b011: begin o_seven_state_1 = DX; o_seven_state_2 = P; o_seven_state_3 = A; o_seven_state_4 = U; end
 			3'b101: begin o_seven_state_1 = DX; o_seven_state_2 = P; o_seven_state_3 = A; o_seven_state_4 = U; end
+			3'b111: begin o_seven_state_1 = A; o_seven_state_2 = A; o_seven_state_3 = A; o_seven_state_4 = A; end
 			default: begin o_seven_state_1 = E; o_seven_state_2 = E; o_seven_state_3 = E; o_seven_state_4 = E; end
 		endcase
+	end
+
+ endmodule
+
+
+
+ module SevenHexDecoderDebug (
+	input        [3:0] i_data,
+	output logic [6:0] o_seven_state_1,
+	output logic [6:0] o_seven_state_2,
+	output logic [6:0] o_seven_state_3,
+	output logic [6:0] o_seven_state_4
+);
+// state: 00-idle, 01-play, 10-record, 11-pause
+/* The layout of seven segment display, 1: dark
+ *    00
+ *   5  1
+ *    66
+ *   4  2
+ *    33
+ */
+	parameter DX = 7'b1111111;
+	parameter D0 = 7'b1000000;
+	parameter D1 = 7'b1111001;
+	// parameter D2 = 7'b0100100;
+	// parameter D3 = 7'b0110000;
+	// parameter D4 = 7'b0011001;
+	// parameter D5 = 7'b0010010;
+	// parameter D6 = 7'b0000010;
+	// parameter D7 = 7'b1011000;
+	// parameter D8 = 7'b0000000;
+	// parameter D9 = 7'b0010000;
+
+	always_comb begin
+		o_seven_state_1 = i_data[3] ? D1 : D0;
+		o_seven_state_2 = i_data[2] ? D1 : D0;
+		o_seven_state_3 = i_data[1] ? D1 : D0;
+		o_seven_state_4 = i_data[0] ? D1 : D0;
 	end
 
  endmodule

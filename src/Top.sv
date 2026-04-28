@@ -234,6 +234,14 @@ module Top (
 		.o_seven_state_4(o_seven_state_4)
 	);
 
+	// SevenHexDecoderDebug state_debug0 (
+	// 	.i_data({4{i_AUD_BCLK}}), // only display 4 states for easier debugging
+	// 	.o_seven_state_1(o_seven_state_1),
+	// 	.o_seven_state_2(o_seven_state_2),
+	// 	.o_seven_state_3(o_seven_state_3),
+	// 	.o_seven_state_4(o_seven_state_4)
+	// );
+
 
 	// NL
 	always_comb begin

@@ -51,11 +51,13 @@ module I2cInitializer (
         24'b0011_0100_000_1001_0_0000_0001
     };
 
-    typedef enum logic [1:0] {
+    typedef enum logic [2:0] {
         IDLE,
         START,
         DATA,
-        STOP
+        BUFFER,
+        STOP,
+        FIN
     } state_t;
 
     state_t state_r, state_w;
@@ -65,9 +67,10 @@ module I2cInitializer (
     logic [2:0] scl_cnt_r, scl_cnt_w;
     logic [4:0] data_bit_idx_r, data_bit_idx_w;
     logic [4:0] data_word_idx_r, data_word_idx_w; // index for configBits
+    logic [3:0] buf_cnt_r, buf_cnt_w; // counter for BUFFER state, if needed
     assign o_sclk = SCL_r;
-    assign o_sdat = oen_r ? 1'bz : SDA_r;
-    assign o_oen = oen_r;
+    assign o_sdat = SDA_r;
+    assign o_oen = ~oen_r;
     assign o_finished = fin_r;
 
     // ========== FSM ==========
@@ -82,6 +85,7 @@ module I2cInitializer (
             SDA_r <= 1;
             oen_r <= 0;
             fin_r <= 0;
+            buf_cnt_r <= 0;
         end else begin
             state_r <= state_w;
             scl_cnt_r <= scl_cnt_w;
@@ -91,6 +95,7 @@ module I2cInitializer (
             SDA_r <= SDA_w;
             oen_r <= oen_w;
             fin_r <= fin_w;
+            buf_cnt_r <= buf_cnt_w;
         end
     end
     // ---- Next State Logic ----
@@ -104,6 +109,7 @@ module I2cInitializer (
         SDA_w = SDA_r;
         SCL_w = SCL_r;
         fin_w = fin_r;
+        buf_cnt_w = buf_cnt_r;
 
         case (state_r)
             IDLE: begin
@@ -137,11 +143,14 @@ module I2cInitializer (
                     if (data_bit_idx_r == 0 && oen_r == 1) begin
                         data_word_idx_w = data_word_idx_r + 1;
                         data_bit_idx_w = 23; // start from MSB of next word
+                        state_w = BUFFER; // go to BUFFER state before sending next word
+                        SCL_w = 0; 
+                        SDA_w = 0; 
                     end
                     // after sending all words, move to STOP state
-                    if (data_word_idx_r == 9 && data_bit_idx_r == 0 && oen_r == 1) begin
-                        state_w = STOP;
-                    end
+                    // if (data_word_idx_r == 9 && data_bit_idx_r == 0 && oen_r == 1) begin
+                    //     state_w = STOP;
+                    // end
                 end
 
                 // update SCL
@@ -156,6 +165,40 @@ module I2cInitializer (
                 if (scl_cnt_r == 0 && data_word_idx_w <= 9) begin
                     SDA_w = configBits[data_word_idx_w][data_bit_idx_w];
                 end
+
+            end
+
+            BUFFER: begin
+                // This state can be used for any necessary delay or processing between sending data and generating stop condition
+                // For simplicity, we directly move to STOP state in this implementation
+                buf_cnt_w = buf_cnt_r + 1;
+                SDA_w = SDA_r;
+                SCL_w = SCL_r;
+                state_w = state_r; // stay in BUFFER until buf_cnt reaches a certain value
+
+                case (buf_cnt_r[2:0]) // example of using buf_cnt for timing control
+                    1: begin
+                        SCL_w = 1;
+                    end
+                    2: begin
+                        SDA_w = 1;
+                    end
+                    4: begin
+                        SDA_w = 0;
+                    end
+                    5: begin
+                        SCL_w = 0;
+                    end
+                    7: begin
+                        state_w = data_word_idx_r == 10 ? STOP : DATA;
+                    end
+                    default: begin
+                        SDA_w = SDA_r;
+                        SCL_w = SCL_r;
+                        state_w = state_r;
+                    end
+                endcase
+
             end
 
             STOP: begin
@@ -167,13 +210,17 @@ module I2cInitializer (
                     SDA_w = 1; // release SDA while SCL is high
                     oen_w = 0; // release SDA
                     fin_w = 1;
-                    state_w = IDLE;
+                    state_w = FIN;
                 end else begin
                     scl_cnt_w = scl_cnt_r + 1;
                 end
 
 
 
+            end
+
+            FIN: begin
+                // stay in FIN state, waiting for reset
             end
 
 
