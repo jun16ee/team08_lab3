@@ -142,7 +142,8 @@ module AudDSP(
             dsp_state_r <= dsp_state_w;
             rdata_now_r <= rdata_now_w;
             rdata_nxt_r <= i_sram_data;
-            read_addr_r <= read_addr_w;
+            if (i_stop) read_addr_r <= 20'd0;
+            else read_addr_r <= read_addr_w;
             op_r <= op_w;
             slow_counter_r <= slow_counter_w;
             wait_SRAM_counter_r <= wait_SRAM_counter_w;
