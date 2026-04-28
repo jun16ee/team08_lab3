@@ -43,9 +43,9 @@ module AudRecorder(  //只讀右聲道
             S_IDLE: begin
                 read_counter_w = 4'd15;
                 read_finish_flag_w = 1'b0;
-                write_addr_w = 20'd0; //重新開始了 要initialize
                 if (i_lrc && i_rec) begin
                     state_w = S_READ;
+                    write_addr_w = 20'd0; //重新開始了 要initialize
                 end
             end
 
@@ -61,10 +61,10 @@ module AudRecorder(  //只讀右聲道
             end
 
             S_REST: begin
+                read_counter_w = 4'd15;
+                read_finish_flag_w = 1'b0;
                 if (i_lrc) begin
                     state_w = S_READ;
-                    read_counter_w = 4'd15;
-                    read_finish_flag_w = 1'b0;
                 end
             end
 
