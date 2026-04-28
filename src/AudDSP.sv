@@ -61,9 +61,9 @@ module AudDSP(
         op_w = op_r;
         case(dsp_state_r)
             S_RESET: begin
+                read_addr_w = 20'd0; //重新開始了 要initialize
                 if (!i_daclrck && i_play) begin
                     dsp_state_w = S_SRAM;
-                    read_addr_w = 20'd0; //重新開始了 要initialize
                 end
             end
             S_PAUSED: begin
@@ -142,8 +142,7 @@ module AudDSP(
             dsp_state_r <= dsp_state_w;
             rdata_now_r <= rdata_now_w;
             rdata_nxt_r <= i_sram_data;
-            if (i_stop) read_addr_r <= 20'd0;
-            else read_addr_r <= read_addr_w;
+            read_addr_r <= read_addr_w;
             op_r <= op_w;
             slow_counter_r <= slow_counter_w;
             wait_SRAM_counter_r <= wait_SRAM_counter_w;
